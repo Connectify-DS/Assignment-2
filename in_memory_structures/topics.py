@@ -1,7 +1,7 @@
 class TopicTable:
-    def __init__(self):
-        self.topic_queues = {}
-        self.last_id = 0
+    def __init__(self,topic_queues={}):
+        self.topic_queues = topic_queues
+        self.last_id = 0 ## remove
 
     def get_topic_queue(self, topic_name):
         return self.topic_queues[topic_name]
@@ -14,9 +14,9 @@ class TopicTable:
 
 
 class TopicQueue:
-    def __init__(self, topic_name):
+    def __init__(self, topic_name,topic_queue=[]):
         self.topic_name = topic_name
-        self.topic_queue = []
+        self.topic_queue = topic_queue
 
     def get_reader_lock(self):
         pass

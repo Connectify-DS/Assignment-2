@@ -1,7 +1,7 @@
 class ProducerTable:
     # This will ideally convert to a Table. Currently a strcture to be maintained in memory.
-    def __init__(self):
-        self.producer_entry = {}
+    def __init__(self,producer_entry={}):
+        self.producer_entry = producer_entry
         self.producer_id_auto_inc = 0
 
     def get_producer(self,producer_id):

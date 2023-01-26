@@ -1,6 +1,6 @@
 class MessageTable:
-    def __init__(self):
-        self.message_table_entries = {}
+    def __init__(self,message_table_entries={}):
+        self.message_table_entries = message_table_entries
         self.last_id = 0
 
     def get_new_id_auto_inc(self):
