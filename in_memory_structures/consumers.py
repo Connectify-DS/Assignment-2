@@ -3,7 +3,6 @@ DEFUALT_OFFSET = 0
 from database_structures import ConsumerDBMS
 
 class ConsumerTable:
-    # This will ideally convert to a Table. Currently a strcture to be maintained in memory.
     def __init__(self):
         self.consumer_dbms = ConsumerDBMS()
 
