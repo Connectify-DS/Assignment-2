@@ -1,7 +1,8 @@
+from database_structures import TopicDBMS
+
 class TopicTable:
-    def __init__(self,topic_queues={}):
-        self.topic_queues = topic_queues
-        self.last_id = 0 ## remove
+    def __init__(self,):
+        self.topic_dbms = TopicDBMS()
 
     def get_topic_queue(self, topic_name):
         return self.topic_queues[topic_name]
@@ -10,7 +11,7 @@ class TopicTable:
         return list(self.topic_queues.keys())
 
     def create_topic_queue(self, topic_name):
-        self.topic_queues[topic_name] = TopicQueue(topic_name)
+        self.topic_dbms.create_topic(topic_name)
 
 
 class TopicQueue:

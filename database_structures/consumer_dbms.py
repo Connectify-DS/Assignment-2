@@ -18,19 +18,19 @@ class ConsumerDBMS:
 
         self.conn.commit()
 
-    def create_consumer(self,topic_name):
+    def register_to_topic(self,topic_name):
         self.cur.execute("""
             INSERT INTO CONSUMERS (TOPIC,OFFSET) 
             VALUES (%s,0)
         """,topic_name)
 
-        id=self.cur.fetchone()[0]
+        consumer_id=self.cur.fetchone()[0]
         
         self.conn.commit()
 
-        return id
+        return consumer_id
 
-    def select_consumer(self,consumer_id):
+    def get_consumer(self,consumer_id):
         self.cur.execute("""
             SELECT * FROM CONSUMERS
             WHERE ID = %s

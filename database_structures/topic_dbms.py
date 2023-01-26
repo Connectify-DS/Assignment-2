@@ -1,8 +1,8 @@
 import psycopg2
 
-from in_memory_structures import Producer
+from in_memory_structures import TopicQueue
 
-class ProducerDBMS:
+class TopicDBMS:
     def __init__(self):
         self.conn = psycopg2.connect(database = "mqsdb", user = "postgres", password = "mayank", 
                                 host = "127.0.0.1", port = "5432")
@@ -10,38 +10,38 @@ class ProducerDBMS:
 
     def create_table(self):
         self.cur.execute("""
-            CREATE TABLE PRODUCERS
+            CREATE TABLE TOPICS
             ID INT PRIMARY KEY NOT NULL,
-            TOPIC TEXT NOT NULL,
+            NAME TEXT NOT NULL,
+            MESSAGES INT[],
         """)
 
         self.conn.commit()
 
-    def register_new_producer_to_topic(self,topic_name):
+    def create_topic(self,name):
         self.cur.execute("""
-            INSERT INTO PRODUCERS (TOPIC) 
+            INSERT INTO TOPICS (NAME) 
             VALUES (%s)
-        """,topic_name)
+        """,name)
 
-        producer_id=self.cur.fetchone()[0]
+        id=self.cur.fetchone()[0]
         
         self.conn.commit()
 
-        return producer_id
+        return id
 
-    def get_producer(self,producer_id):
+    def get_topic_queue(self,topic_id):
         self.cur.execute("""
-            SELECT * FROM PRODUCERS
+            SELECT * FROM TopicsS
             WHERE ID = %s
-        """,producer_id)
+        """,topic_id)
 
         row=self.cur.fetchone()
 
-        return Producer(
-                producer_id=row[0],
-                producer_topic=row[1]
+        return TopicQueue(
+                Topics=row[1]
             )
 
 if __name__=="__main__":
-    dbms=ProducerDBMS()
+    dbms=TopicsDBMS()
     dbms.create_table()
