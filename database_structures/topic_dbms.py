@@ -8,10 +8,10 @@ class TopicDBMS:
 
     def create_table(self):
         self.cur.execute("""
-            CREATE TABLE TOPICS
-            ID INT PRIMARY KEY NOT NULL,
-            NAME TEXT NOT NULL,
-            MESSAGES INT[],
+            CREATE TABLE TOPICS(
+            ID SERIAL PRIMARY KEY NOT NULL,
+            NAME TEXT NOT NULL UNIQUE,
+            MESSAGES INT[]);
         """)
 
         self.conn.commit()
@@ -20,9 +20,10 @@ class TopicDBMS:
         self.cur.execute("""
             INSERT INTO TOPICS (NAME) 
             VALUES (%s)
-        """,name)
+            RETURNING ID
+        """,(name,))
 
-        id=self.cur.fetchone()[0]
+        id=self.cur.fetchone()
         
         self.conn.commit()
 
@@ -39,33 +40,35 @@ class TopicDBMS:
         self.cur.execute("""
             SELECT * FROM TOPICS
             WHERE NAME = %s
-        """,topic_name)
+        """,(topic_name,))
 
         row=self.cur.fetchone()
 
         return TopicQueueDBMS(
             topic_name=row[1],
             cur=self.cur,
+            conn=self.conn
         )
 
 class TopicQueueDBMS:
-    def __init__(self, topic_name,cur):
+    def __init__(self, topic_name,cur,conn):
         self.topic_name = topic_name
         self.cur=cur
+        self.conn=conn
 
     def enqueue(self, message):
         if self.size()==0:
             self.cur.execute("""
                 UPDATE TOPICS 
-                SET MESSAGES = '{%s}'
+                SET MESSAGES = ARRAY[%s]
                 WHERE NAME=%s
-            """,message,self.topic_name)
+            """,(message,self.topic_name,))
         else:
             self.cur.execute("""
                 UPDATE TOPICS 
                 SET MESSAGES = ARRAY_APPEND(MESSAGES,%s) 
                 WHERE NAME=%s
-            """,message,self.topic_name)
+            """,(message,self.topic_name,))
 
         self.conn.commit()
         
@@ -74,7 +77,7 @@ class TopicQueueDBMS:
         self.cur.execute("""
             SELECT MESSAGES[%s] FROM TOPICS 
             WHERE NAME=%s
-        """,str(offset),self.topic_name)
+        """,(str(offset),self.topic_name,))
         
         return self.cur.fetchone()
 
@@ -82,7 +85,7 @@ class TopicQueueDBMS:
         self.cur.execute("""
             SELECT MESSAGES FROM TOPICS 
             WHERE NAME=%s
-        """,self.topic_name)
+        """,(self.topic_name,))
 
         row=self.cur.fetchone()
 

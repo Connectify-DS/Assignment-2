@@ -10,21 +10,22 @@ class ConsumerDBMS:
 
     def create_table(self):
         self.cur.execute("""
-            CREATE TABLE CONSUMERS
-            ID INT PRIMARY KEY NOT NULL,
+            CREATE TABLE CONSUMERS(
+            ID SERIAL PRIMARY KEY NOT NULL,
             TOPIC TEXT NOT NULL,
-            OFFSET INT NOT NULL,
+            OFSET INT NOT NULL);
         """)
 
         self.conn.commit()
 
     def register_to_topic(self,topic_name):
         self.cur.execute("""
-            INSERT INTO CONSUMERS (TOPIC,OFFSET) 
-            VALUES (%s,0)
-        """,topic_name)
+            INSERT INTO CONSUMERS (TOPIC,OFSET) 
+            VALUES (%s,1)
+            RETURNING ID
+        """,(topic_name,))
 
-        consumer_id=self.cur.fetchone()[0]
+        consumer_id=self.cur.fetchone()
         
         self.conn.commit()
 
@@ -34,7 +35,7 @@ class ConsumerDBMS:
         self.cur.execute("""
             SELECT * FROM CONSUMERS
             WHERE ID = %s
-        """,consumer_id)
+        """,(consumer_id),)
 
         row=self.cur.fetchone()
 

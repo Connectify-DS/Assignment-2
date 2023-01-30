@@ -10,9 +10,9 @@ class ProducerDBMS:
 
     def create_table(self):
         self.cur.execute("""
-            CREATE TABLE PRODUCERS
-            ID INT PRIMARY KEY NOT NULL,
-            TOPIC TEXT NOT NULL,
+            CREATE TABLE PRODUCERS(
+            ID SERIAL PRIMARY KEY NOT NULL,
+            TOPIC TEXT NOT NULL);
         """)
 
         self.conn.commit()
@@ -21,9 +21,10 @@ class ProducerDBMS:
         self.cur.execute("""
             INSERT INTO PRODUCERS (TOPIC) 
             VALUES (%s)
-        """,topic_name)
+            RETURNING ID
+        """,(topic_name,))
 
-        producer_id=self.cur.fetchone()[0]
+        producer_id=self.cur.fetchone()
         
         self.conn.commit()
 
@@ -33,7 +34,7 @@ class ProducerDBMS:
         self.cur.execute("""
             SELECT * FROM PRODUCERS
             WHERE ID = %s
-        """,producer_id)
+        """,(producer_id,))
 
         row=self.cur.fetchone()
 

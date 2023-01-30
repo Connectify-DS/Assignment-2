@@ -10,9 +10,9 @@ class MessageDBMS:
 
     def create_table(self):
         self.cur.execute("""
-            CREATE TABLE MESSAGES
-            ID INT PRIMARY KEY NOT NULL,
-            MESSAGE TEXT NOT NULL,
+            CREATE TABLE MESSAGES(
+            ID SERIAL PRIMARY KEY NOT NULL,
+            MESSAGE TEXT NOT NULL);
         """)
 
         self.conn.commit()
@@ -21,9 +21,10 @@ class MessageDBMS:
         self.cur.execute("""
             INSERT INTO MESSAGES (MESSAGE) 
             VALUES (%s)
-        """,message)
+            RETURNING ID
+        """,(message,))
 
-        message_id=self.cur.fetchone()[0]
+        message_id=self.cur.fetchone()
         
         self.conn.commit()
 
@@ -33,7 +34,7 @@ class MessageDBMS:
         self.cur.execute("""
             SELECT * FROM MESSAGES
             WHERE ID = %s
-        """,message_id)
+        """,(message_id,))
 
         row=self.cur.fetchone()
 
