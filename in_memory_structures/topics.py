@@ -1,8 +1,7 @@
-from database_structures import TopicDBMS
-
 class TopicTable:
-    def __init__(self,):
-        self.topic_dbms = TopicDBMS()
+    def __init__(self):
+        self.topic_queues = {}
+        self.last_id = 0
 
     def get_topic_queue(self, topic_name):
         return self.topic_queues[topic_name]
@@ -11,25 +10,13 @@ class TopicTable:
         return list(self.topic_queues.keys())
 
     def create_topic_queue(self, topic_name):
-        self.topic_dbms.create_topic(topic_name)
+        self.topic_queues[topic_name] = TopicQueue(topic_name)
 
 
 class TopicQueue:
-    def __init__(self, topic_name,topic_queue=[]):
+    def __init__(self, topic_name):
         self.topic_name = topic_name
-        self.topic_queue = topic_queue
-
-    def get_reader_lock(self):
-        pass
-
-    def get_writer_lock(self):
-        pass
-
-    def release_reader_lock(self):
-        pass
-
-    def release_writer_lock(self):
-        pass
+        self.topic_queue = []
 
     def enqueue(self, message):
         self.topic_queue.append(message)
