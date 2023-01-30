@@ -3,7 +3,7 @@ from flask import request
 from flask import jsonify
 from message_queue_system import MessageQueueSystem
 
-mqs = MessageQueueSystem(persistent=True)
+mqs = MessageQueueSystem(persistent=False)
 app = Flask(__name__)
 
 @app.route('/')
@@ -22,11 +22,10 @@ def createTopic():
             "message": f'Topic {topicName} created successfully',
         }
         return jsonify(resp)
-        # raise Exception("Test error")
-    except:
+    except Exception as e:
         resp = {
             "status": "failure",
-            "message": "Error in Creating Topic",
+            "message": str(e),
         }
         return jsonify(resp)
 
@@ -39,11 +38,10 @@ def listTopic():
             "topics": topics,
         }
         return jsonify(resp)
-        # raise Exception("Test error")
-    except:
+    except Exception as e:
         resp = {
             "status": "failure",
-            "message": "Error in Listing Topics",
+            "message": str(e),
         }
         return jsonify(resp)
 
@@ -58,11 +56,10 @@ def registerConsumer():
             "consumer_id": consumerId,
         }
         return jsonify(resp)
-        # raise Exception("Test error")
-    except:
+    except Exception as e:
         resp = {
             "status": "failure",
-            "message": "Error in Registering Consumer",
+            "message": str(e),
         }
         return jsonify(resp)
 
@@ -74,18 +71,17 @@ def registerProducer():
         producerId = mqs.register_producer(topic_name=topicName)
         resp = {
             "status": "success",
-            "consumer_id": producerId,
+            "producer_id": producerId,
         }
         return jsonify(resp)
-        # raise Exception("Test error")
-    except:
+    except Exception as e:
         resp = {
             "status": "failure",
-            "message": "Error in Registering Producer",
+            "message": str(e),
         }
         return jsonify(resp)
 
-@app.route('/producer/produce', methods=['GET'])
+@app.route('/producer/produce', methods=['POST'])
 def publish():
     req = request.json
     topicName = req['topic_name']
@@ -97,11 +93,10 @@ def publish():
             "status": "success",
         }
         return jsonify(resp)
-        # raise Exception("Test error")
-    except:
+    except Exception as e:
         resp = {
             "status": "failure",
-            "message": "Error in publishing message",
+            "message": str(e),
         }
         return jsonify(resp)
 
@@ -111,17 +106,16 @@ def retrieve():
     topicName = req['topic_name']
     consumerId = req['consumer_id']
     try:
-        message = mqs.dequeue(topic=topicName, consumer_id=consumerId)
+        message = mqs.dequeue(topic_name=topicName, consumer_id=consumerId)
         resp = {
             "status": "success",
-            "message": message,
+            "message": str(message),
         }
         return jsonify(resp)
-        # raise Exception("Test error")
-    except:
+    except Exception as e:
         resp = {
             "status": "failure",
-            "message": "Error in recieving message",
+            "message": str(e),
         }
         return jsonify(resp)
 
@@ -137,11 +131,10 @@ def getSize():
             "size": queuesize,
         }
         return jsonify(resp)
-        # raise Exception("Test error")
-    except:
+    except Exception as e:
         resp = {
             "status": "failure",
-            "message": "Error in calculating Size",
+            "message": str(e),
         }
         return jsonify(resp)
 

@@ -24,7 +24,7 @@ class MessageDBMS:
             RETURNING ID
         """,(message,))
 
-        message_id=self.cur.fetchone()
+        message_id=self.cur.fetchone()[0]
         
         self.conn.commit()
 
