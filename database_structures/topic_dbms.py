@@ -23,7 +23,7 @@ class TopicDBMS:
             RETURNING ID
         """,(name,))
 
-        id=self.cur.fetchone()
+        id=self.cur.fetchone()[0]
         
         self.conn.commit()
 
@@ -34,7 +34,11 @@ class TopicDBMS:
             SELECT NAME FROM TOPICS
         """)
 
-        return list(self.cur.fetchall())
+        row = self.cur.fetchall()
+        topics = []
+        for val in row:
+            topics.append(val[0])
+        return topics
 
     def get_topic_queue(self,topic_name):
         self.cur.execute("""

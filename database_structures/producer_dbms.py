@@ -24,7 +24,7 @@ class ProducerDBMS:
             RETURNING ID
         """,(topic_name,))
 
-        producer_id=self.cur.fetchone()
+        producer_id=self.cur.fetchone()[0]
         
         self.conn.commit()
 
@@ -36,8 +36,13 @@ class ProducerDBMS:
             WHERE ID = %s
         """,(producer_id,))
 
-        row=self.cur.fetchone()
-
+        try:
+            row=self.cur.fetchone()
+            if row is None:
+                raise Exception("Invalid Producer Id")
+        except Exception as e:
+            raise e
+        
         return Producer(
                 producer_id=row[0],
                 producer_topic=row[1]

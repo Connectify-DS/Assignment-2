@@ -25,7 +25,7 @@ class ConsumerDBMS:
             RETURNING ID
         """,(topic_name,))
 
-        consumer_id=self.cur.fetchone()
+        consumer_id=self.cur.fetchone()[0]
         
         self.conn.commit()
 
@@ -37,7 +37,12 @@ class ConsumerDBMS:
             WHERE ID = %s
         """,(consumer_id),)
 
-        row=self.cur.fetchone()
+        try:
+            row=self.cur.fetchone()
+            if row is None:
+                raise Exception("Invalid Consumer id")
+        except Exception as e:
+            raise e
 
         return Consumer(
                 consumer_id=row[0],
