@@ -59,9 +59,9 @@ class MyConsumer:
     # get next message from the topic name 
     def get_next(self, topic_name):
 
-        # if topic_name not in self.id_topic_map.keys():
-        #     print(f"Topic name : {topic_name} not subscribed")
-        #     return
+        if topic_name not in self.id_topic_map.keys():
+            print(f"Topic name : {topic_name} not subscribed")
+            return
 
         consume_url = self.broker + "consumer/consume"
         
@@ -81,12 +81,33 @@ class MyConsumer:
         response = r.json()
 
         if response["status"] == "Success":
-            print("Sent successfully")
+            print("Message recieved successfully")
 
         else:
             print(f"Failed, {response['message']}")
        
-        return response   
+        return response  
+
+
+    def subscribe_new_topic(self, topic_name):
+
+        register_url = self.broker +  "/consumer/register"
+        data = {"topic_name" : topic_name}
+        
+        try:
+            r = requests.post(register_url, json = data)
+            r.raise_for_status()
+        except requests.exceptions.HTTPError as errh:
+            print ("Http Error:",errh)
+        except requests.exceptions.ConnectionError as errc:
+            print ("Error Connecting:",errc)
+        
+        response = r.json()
+
+        if response["status"] == "Success":
+            consumer_id = response["consumer_id"]
+            self.id_topic_map[topic_name] = consumer_id
+        return         
 
 
 

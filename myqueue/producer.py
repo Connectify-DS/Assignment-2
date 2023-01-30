@@ -13,6 +13,7 @@ class MyProducer:
         self.id_topic_map = {}
         
         producer_url = self.broker + "/producer/register"
+        
         for topic in topics:
             if topic in self.id_topic_map.keys():
                 continue
@@ -32,6 +33,7 @@ class MyProducer:
                 self.id_topic_map[topic] = producer_id
 
     def add_new_topic(self, topic):
+
         producer_url = self.broker + "/producer/register"
         
         if topic in self.id_topic_map.keys():
@@ -55,7 +57,7 @@ class MyProducer:
             
     def send(self, topic, message):
         
-        if topic not in self.topics:
+        if topic not in self.id_topic_map.keys():
             print(f"Topic not registered {topic}")
             return 
 
@@ -78,7 +80,7 @@ class MyProducer:
         response = r.json()
 
         if response["status"] == "Success":
-            print("Sent successfully")
+            print("Message sent successfully")
         else:
             print(f"Failed, {response['message']}")
        
