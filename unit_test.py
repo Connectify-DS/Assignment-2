@@ -50,12 +50,52 @@ def test_message_dbms():
     message=message_dbms.get_message(id)
     print("Message: ",message.message)
 
+def test_topic_dbms():
+    topic_dbms=TopicDBMS()
+    id1=topic_dbms.create_topic_queue("INFO")
+    print("Topic ID: ",id1)
+
+    # Creating topic with same name again is not allowed
+    try:
+        id=topic_dbms.create_topic_queue("INFO")
+        print("Topic ID: ",id)
+    except:
+        print("Caught Excaption")
+        topic_dbms.conn.rollback()
+    
+    id2=topic_dbms.create_topic_queue("DEBUG")
+    print("Topic ID: ",id2)
+
+    print("Topic List:")
+    for val in topic_dbms.get_topic_list():
+        print(val)
+    
+    topic_queue=topic_dbms.get_topic_queue("INFO")
+    print("Topic Obtained: ",topic_queue.topic_name)
+
+def test_topic_queue_dbms():
+    topic_dbms=TopicDBMS()
+    topic_queue=topic_dbms.get_topic_queue("INFO")
+    
+    topic_queue.enqueue(0)
+    topic_queue.enqueue(1)
+    topic_queue.enqueue(2)
+
+    print("Get top message: ",topic_queue.get_at_offset(1))
+
+    sz=topic_queue.size()
+    print("Queue Size: ",sz)
+
+    print("Get last message: ",topic_queue.get_at_offset(sz))
+
 
 
 if __name__=="__main__":
     drop_tables()
     create_tables()
 
-    # test_consumer_dbms()
-    # test_producer_dbms()
-    # test_message_dbms()
+    test_consumer_dbms()
+    test_producer_dbms()
+    test_message_dbms()
+    test_topic_dbms()
+    test_topic_queue_dbms()
