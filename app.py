@@ -3,8 +3,8 @@ from flask import request
 from flask import jsonify
 from message_queue_system import MessageQueueSystem
 
+mqs = MessageQueueSystem(persistent=True)
 app = Flask(__name__)
-mqs = MessageQueueSystem()
 
 @app.route('/')
 def index():
@@ -12,69 +12,138 @@ def index():
 
 @app.route('/topics', methods=['POST'])
 def createTopic():
-    topicName = request.form.get('topic_name')
+    req = request.json
+    topicName = req['topic_name']
+    print(topicName)
     try:
         mqs.create_topic(topic_name=topicName)
-        raise Exception("Test error")
+        resp = {
+            "status": "success",
+            "message": f'Topic {topicName} created successfully',
+        }
+        return jsonify(resp)
+        # raise Exception("Test error")
     except:
-        return jsonify("Error Message")
+        resp = {
+            "status": "failure",
+            "message": "Error in Creating Topic",
+        }
+        return jsonify(resp)
 
 @app.route('/topics', methods=['GET'])
 def listTopic():
     try:
-        print(mqs.list_topics())
-        raise Exception("Test error")
+        topics = mqs.list_topics()
+        resp = {
+            "status": "success",
+            "topics": topics,
+        }
+        return jsonify(resp)
+        # raise Exception("Test error")
     except:
-        return jsonify("Error Message")
+        resp = {
+            "status": "failure",
+            "message": "Error in Listing Topics",
+        }
+        return jsonify(resp)
 
 @app.route('/consumer/register', methods=['POST'])
 def registerConsumer():
-    topicName = request.form.get('topic_name')
+    req = request.json
+    topicName = req['topic_name']
     try:
-        mqs.register_consumer(topic_name=topicName)
-        raise Exception("Test error")
+        consumerId = mqs.register_consumer(topic_name=topicName)
+        resp = {
+            "status": "success",
+            "consumer_id": consumerId,
+        }
+        return jsonify(resp)
+        # raise Exception("Test error")
     except:
-        return jsonify("Error Message")
+        resp = {
+            "status": "failure",
+            "message": "Error in Registering Consumer",
+        }
+        return jsonify(resp)
 
 @app.route('/producer/register', methods=['POST'])
 def registerProducer():
-    topicName = request.form.get('topic_name')
+    req = request.json
+    topicName = req['topic_name']
     try:
-        mqs.register_producer(topic_name=topicName)
-        raise Exception("Test error")
+        producerId = mqs.register_producer(topic_name=topicName)
+        resp = {
+            "status": "success",
+            "consumer_id": producerId,
+        }
+        return jsonify(resp)
+        # raise Exception("Test error")
     except:
-        return jsonify("Error Message")
+        resp = {
+            "status": "failure",
+            "message": "Error in Registering Producer",
+        }
+        return jsonify(resp)
 
 @app.route('/producer/produce', methods=['GET'])
 def publish():
-    topicName = request.form.get('topic_name')
-    producerID = request.form.get('producer_id')
-    message = request.form.get('message')
+    req = request.json
+    topicName = req['topic_name']
+    producerID = req['producer_id']
+    message = req['message']
     try:
         mqs.enqueue(topic_name=topicName, producer_id=producerID, message=message)
-        raise Exception("Test error")
+        resp = {
+            "status": "success",
+        }
+        return jsonify(resp)
+        # raise Exception("Test error")
     except:
-        return jsonify("Error Message")
+        resp = {
+            "status": "failure",
+            "message": "Error in publishing message",
+        }
+        return jsonify(resp)
 
 @app.route('/consumer/consume', methods=['GET'])
 def retrieve():
-    topicName = request.form.get('topic_name')
-    consumerId = request.form.get('consumer_id')
+    req = request.json
+    topicName = req['topic_name']
+    consumerId = req['consumer_id']
     try:
-        mqs.dequeue(topic=topicName, consumer_id=consumerId)
-        raise Exception("Test error")
+        message = mqs.dequeue(topic=topicName, consumer_id=consumerId)
+        resp = {
+            "status": "success",
+            "message": message,
+        }
+        return jsonify(resp)
+        # raise Exception("Test error")
     except:
-        return jsonify("Error Message")
+        resp = {
+            "status": "failure",
+            "message": "Error in recieving message",
+        }
+        return jsonify(resp)
 
 @app.route('/size', methods=['GET'])
 def getSize():
-    topicName = request.form.get('topic_name')
-    consumerId = request.form.get('consumer_id')
+    req = request.json
+    topicName = req['topic_name']
+    consumerId = req['consumer_id']
     try:
-        print(mqs.size(topic=topicName, consumer_id=consumerId))
-        raise Exception("Test error")
+        queuesize = mqs.size(topic=topicName, consumer_id=consumerId)
+        resp = {
+            "status": "success",
+            "size": queuesize,
+        }
+        return jsonify(resp)
+        # raise Exception("Test error")
     except:
-        return jsonify("Error Message")
+        resp = {
+            "status": "failure",
+            "message": "Error in calculating Size",
+        }
+        return jsonify(resp)
 
 if __name__ == "__main__":
     app.run(debug=True)
