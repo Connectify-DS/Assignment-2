@@ -3,7 +3,7 @@ from flask import request
 from flask import jsonify
 from message_queue_system import MessageQueueSystem
 
-IS_PERSISTENT = False
+IS_PERSISTENT = True
 mqs = MessageQueueSystem(persistent=IS_PERSISTENT)
 app = Flask(__name__)
 
