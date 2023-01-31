@@ -5,7 +5,7 @@ class MyProducer:
 
     def __init__(self, topics, broker):
         
-        self.broker = broker 
+        self.broker = broker
         self.topics = topics
 
         # gets the list of the topics which have already been created
@@ -31,6 +31,7 @@ class MyProducer:
             if producer_response["status"] == "success":
                 producer_id = producer_response["producer_id"]
                 self.id_topic_map[topic] = producer_id
+                print(f"Registered producer_id {producer_id} for topic {topic}")
 
     def add_new_topic(self, topic):
 
@@ -52,6 +53,7 @@ class MyProducer:
         if producer_response["status"] == "success":
             producer_id = producer_response["producer_id"]
             self.id_topic_map[topic] = producer_id
+            print(f"Registered producer_id {producer_id} for topic {topic}")
 
         return 
             
@@ -85,8 +87,3 @@ class MyProducer:
             print(f"Failed, {response['message']}")
        
         return
-
-
-if __name__ == "__main__":
-
-    pass

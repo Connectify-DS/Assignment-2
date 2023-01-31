@@ -32,6 +32,7 @@ class MyConsumer:
             if subscribe_response["status"] == "success":
                 consumer_id = subscribe_response["consumer_id"]
                 self.id_topic_map[topic_name] = consumer_id
+                print(f"Registered consumer_id {consumer_id} for topic {topic_name}")
 
     # consumer function to list all the topics  
     def get_all_topics(self):
@@ -107,7 +108,5 @@ class MyConsumer:
         if response["status"] == "success":
             consumer_id = response["consumer_id"]
             self.id_topic_map[topic_name] = consumer_id
+            print(f"Registered consumer_id {consumer_id} for topic {topic_name}")
         return         
-
-
-
