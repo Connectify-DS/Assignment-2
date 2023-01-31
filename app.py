@@ -3,7 +3,7 @@ from flask import request
 from flask import jsonify
 from message_queue_system import MessageQueueSystem
 
-IS_PERSISTENT = True
+IS_PERSISTENT = False
 mqs = MessageQueueSystem(persistent=IS_PERSISTENT)
 app = Flask(__name__)
 
@@ -17,7 +17,7 @@ def create_tables():
 
 @app.route('/')
 def index():
-    return "DS-Connectify"
+    return "DS-Connectify", 200
 
 @app.route('/topics', methods=['POST'])
 def createTopic():
@@ -29,13 +29,13 @@ def createTopic():
             "status": "success",
             "message": f'Topic {topicName} created successfully',
         }
-        return jsonify(resp)
+        return jsonify(resp), 200
     except Exception as e:
         resp = {
             "status": "failure",
             "message": str(e),
         }
-        return jsonify(resp)
+        return jsonify(resp), 400
 
 @app.route('/topics', methods=['GET'])
 def listTopic():
@@ -45,13 +45,13 @@ def listTopic():
             "status": "success",
             "topics": topics,
         }
-        return jsonify(resp)
+        return jsonify(resp), 200
     except Exception as e:
         resp = {
             "status": "failure",
             "message": str(e),
         }
-        return jsonify(resp)
+        return jsonify(resp), 400
 
 @app.route('/consumer/register', methods=['POST'])
 def registerConsumer():
@@ -63,13 +63,13 @@ def registerConsumer():
             "status": "success",
             "consumer_id": consumerId[0],
         }
-        return jsonify(resp)
+        return jsonify(resp), 200
     except Exception as e:
         resp = {
             "status": "failure",
             "message": str(e),
         }
-        return jsonify(resp)
+        return jsonify(resp), 400
 
 @app.route('/producer/register', methods=['POST'])
 def registerProducer():
@@ -81,13 +81,13 @@ def registerProducer():
             "status": "success",
             "producer_id": producerId,
         }
-        return jsonify(resp)
+        return jsonify(resp), 200
     except Exception as e:
         resp = {
             "status": "failure",
             "message": str(e),
         }
-        return jsonify(resp)
+        return jsonify(resp), 400
 
 @app.route('/producer/produce', methods=['POST'])
 def publish():
@@ -100,13 +100,13 @@ def publish():
         resp = {
             "status": "success",
         }
-        return jsonify(resp)
+        return jsonify(resp), 200
     except Exception as e:
         resp = {
             "status": "failure",
             "message": str(e),
         }
-        return jsonify(resp)
+        return jsonify(resp), 400
 
 @app.route('/consumer/consume', methods=['GET'])
 def retrieve():
@@ -119,13 +119,13 @@ def retrieve():
             "status": "success",
             "message": str(message.message),
         }
-        return jsonify(resp)
+        return jsonify(resp), 200
     except Exception as e:
         resp = {
             "status": "failure",
             "message": str(e),
         }
-        return jsonify(resp)
+        return jsonify(resp), 400
 
 @app.route('/size', methods=['GET'])
 def getSize():
@@ -138,13 +138,13 @@ def getSize():
             "status": "success",
             "size": queuesize,
         }
-        return jsonify(resp)
+        return jsonify(resp), 200
     except Exception as e:
         resp = {
             "status": "failure",
             "message": str(e),
         }
-        return jsonify(resp)
+        return jsonify(resp), 400
 
 if __name__ == "__main__":
     app.run(debug=True)
