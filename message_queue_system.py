@@ -5,6 +5,7 @@ from database_structures import ConsumerDBMS, ProducerDBMS, TopicDBMS, MessageDB
 
 class MessageQueueSystem:
     def __init__(self,persistent):
+        self.persistent = persistent
         if persistent:
             self.conn = psycopg2.connect(database = DATABASE, user = USER, password = PASSWORD, 
                                 host = HOST, port = PORT)
@@ -87,7 +88,10 @@ class MessageQueueSystem:
             if topicName != topic_name:
                 raise Exception("This Topic is not subscribed under this Id")
             else:
-                message_id = consumer.get_next_message(topic_queue, ofset)
+                if self.persistent:
+                    message_id = consumer.get_next_message(topic_queue, ofset+1)
+                else:
+                    message_id = consumer.get_next_message(topic_queue, ofset)
                 if message_id:
                     message_data = self.message_table.get_message(message_id)
                     return message_data

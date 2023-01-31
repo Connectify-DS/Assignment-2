@@ -89,7 +89,8 @@ class TopicQueueDBMS:
         """,(self.topic_name,))
 
         row=self.cur.fetchone()
-
+        # print(row[0])
+        
         if row[0]==None:
             return 0
         else:

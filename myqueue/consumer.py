@@ -63,7 +63,7 @@ class MyConsumer:
             print(f"Topic name : {topic_name} not subscribed")
             return
 
-        consume_url = self.broker + "consumer/consume"
+        consume_url = self.broker + "/consumer/consume"
         
         data = {
             "topic_name" : topic_name, 
@@ -71,7 +71,7 @@ class MyConsumer:
         }
         
         try:
-            r = requests.post(consume_url, json = data)
+            r = requests.get(consume_url, json = data)
             r.raise_for_status()
         except requests.exceptions.HTTPError as errhttp :
             print(f"HTTP error:{errhttp}")
@@ -81,7 +81,7 @@ class MyConsumer:
         response = r.json()
 
         if response["status"] == "success":
-            print("Message recieved successfully")
+            print(f"Message recieved successfully:{response['message']}")
 
         else:
             print(f"Failed, {response['message']}")
@@ -107,7 +107,28 @@ class MyConsumer:
         if response["status"] == "success":
             consumer_id = response["consumer_id"]
             self.id_topic_map[topic_name] = consumer_id
-        return         
+        return     
+
+    def get_queue_size(self, topic_name):
+        register_url = self.broker +  "/size"
+        data = {
+            "topic_name" : topic_name, 
+            "consumer_id": self.id_topic_map[topic_name]
+        }
+        
+        try:
+            r = requests.get(register_url, json = data)
+            r.raise_for_status()
+        except requests.exceptions.HTTPError as errh:
+            print ("Http Error:",errh)
+        except requests.exceptions.ConnectionError as errc:
+            print ("Error Connecting:",errc)
+        
+        response = r.json()
+
+        if response["status"] == "success":
+            print(f"Size:{response['size']}")
+        return        
 
 
 

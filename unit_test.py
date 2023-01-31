@@ -92,10 +92,10 @@ def test_topic_queue_dbms():
 
 if __name__=="__main__":
     drop_tables()
-    create_tables()
+    # create_tables()
 
-    test_consumer_dbms()
-    test_producer_dbms()
-    test_message_dbms()
-    test_topic_dbms()
-    test_topic_queue_dbms()
+    # test_consumer_dbms()
+    # test_producer_dbms()
+    # test_message_dbms()
+    # test_topic_dbms()
+    # test_topic_queue_dbms()

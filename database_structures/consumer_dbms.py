@@ -18,7 +18,7 @@ class ConsumerDBMS:
     def register_to_topic(self,topic_name):
         self.cur.execute("""
             INSERT INTO CONSUMERS (TOPIC,OFSET) 
-            VALUES (%s,1)
+            VALUES (%s,0)
             RETURNING ID
         """,(topic_name,))
 

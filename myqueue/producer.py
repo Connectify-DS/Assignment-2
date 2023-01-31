@@ -80,7 +80,7 @@ class MyProducer:
         response = r.json()
 
         if response["status"] == "success":
-            print("Message sent successfully")
+            print(f"Message sent successfully:{message}")
         else:
             print(f"Failed, {response['message']}")
        
