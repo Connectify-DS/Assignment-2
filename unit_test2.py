@@ -1,8 +1,9 @@
 from database_structures import *
+from config import *
 import psycopg2
 
-conn = psycopg2.connect(database = "mqsdb", user = "postgres", password = "mayank", 
-                                host = "127.0.0.1", port = "5432")
+conn = psycopg2.connect(database = DATABASE, user = USER, password = PASSWORD, 
+                                host = HOST, port = PORT)
 cur=conn.cursor()
 
 def create_tables():
