@@ -21,7 +21,7 @@ def create_tables():
 def drop_tables():
     
     cur.execute("""
-        DROP TABLE CONSUMERS, PRODUCERS, MESSAGES, TOPICS;
+        DROP TABLE IF EXISTS CONSUMERS, PRODUCERS, MESSAGES, TOPICS;
     """)
 
     conn.commit()

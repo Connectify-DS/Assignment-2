@@ -1,6 +1,6 @@
 from message_queue_system import MessageQueueSystem
 
-message_queue_system = MessageQueueSystem()
+message_queue_system = MessageQueueSystem(persistent=False)
 message_queue_system.create_topic("abcd")
 print(message_queue_system.list_topics())
 message_queue_system.create_topic("abc")
@@ -16,4 +16,4 @@ print(message_queue_system.dequeue("abcd", 1).message)
 print(message_queue_system.dequeue("abcd", 1).message)
 print(message_queue_system.register_consumer("abcd"))
 print(message_queue_system.dequeue("abcd", 2).message)
-print(message_queue_system.dequeue("abcd", 1).message)
+print(message_queue_system.dequeue("abcd", 2).message)
