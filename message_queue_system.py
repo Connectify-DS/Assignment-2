@@ -4,7 +4,7 @@ from in_memory_structures import ConsumerTable, ProducerTable, TopicTable, Messa
 from database_structures import ConsumerDBMS, ProducerDBMS, TopicDBMS, MessageDBMS
 
 class MessageQueueSystem:
-    def __init__(self,persistent):
+    def __init__(self, persistent):
         if persistent:
             self.conn = psycopg2.connect(database = DATABASE, user = USER, password = PASSWORD, 
                                 host = HOST, port = PORT)
