@@ -29,5 +29,3 @@ class TopicQueue:
     def size(self):
         return len(self.topic_queue)
 
-    def can_write(self):
-        return True

@@ -1,3 +1,5 @@
+from models import Message
+
 class MessageTable:
     def __init__(self):
         self.message_table_entries = {}
@@ -14,8 +16,3 @@ class MessageTable:
         message_id = self.get_new_id_auto_inc()
         self.message_table_entries[message_id] = Message(message)
         return message_id
-
-
-class Message:
-    def __init__(self, message):
-        self.message = message

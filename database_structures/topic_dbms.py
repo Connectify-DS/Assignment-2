@@ -98,9 +98,6 @@ class TopicQueueDBMS:
         else:
             return len(row[0])
 
-    def can_write(self):
-        return True
-
 if __name__=="__main__":
     dbms=TopicDBMS()
     dbms.create_table()

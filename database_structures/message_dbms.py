@@ -1,6 +1,6 @@
 import psycopg2
 
-from in_memory_structures import Message
+from models import Message
 
 class MessageDBMS:
     def __init__(self):

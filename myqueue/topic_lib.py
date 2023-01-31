@@ -9,7 +9,7 @@ class ServerFunctions:
 
     def CreateTopic(self, topic_name):
 
-        topic_url = broker + "/topics"
+        topic_url = self.broker + "/topics"
         data = {"topic_name": topic_name}
 
         try:
@@ -31,7 +31,7 @@ class ServerFunctions:
 
     def ListTopics(self):
 
-        topic_url = self.broker + "/topics"
+        topics_url = self.broker + "/topics"
         data = {"topic_name": ""}
 
         try:

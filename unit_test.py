@@ -91,7 +91,7 @@ def test_topic_queue_dbms():
 
 
 if __name__=="__main__":
-    drop_tables()
+    # drop_tables()
     create_tables()
 
     test_consumer_dbms()

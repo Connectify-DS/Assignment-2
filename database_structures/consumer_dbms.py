@@ -1,6 +1,6 @@
 import psycopg2
 
-from in_memory_structures import Consumer
+from models import Consumer
 
 class ConsumerDBMS:
     def __init__(self):

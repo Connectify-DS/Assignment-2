@@ -1,6 +1,6 @@
 import psycopg2
 
-from in_memory_structures import Producer
+from models import Producer
 
 class ProducerDBMS:
     def __init__(self):

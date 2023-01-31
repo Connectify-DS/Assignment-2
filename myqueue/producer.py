@@ -70,7 +70,7 @@ class MyProducer:
         }
 
         try:
-            r = requests.post(producer_url, json = data)
+            r = requests.post(send_url, json = data)
             r.raise_for_status()
         except requests.exceptions.HTTPError as errhttp :
             print(f"HTTP error:{errhttp}")
