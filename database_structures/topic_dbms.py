@@ -1,5 +1,3 @@
-import psycopg2
-
 class TopicDBMS:
     def __init__(self, conn, cur):
         self.conn = conn

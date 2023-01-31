@@ -1,12 +1,13 @@
+import psycopg2
+from config import *
 from in_memory_structures import ConsumerTable, ProducerTable, TopicTable, MessageTable
 from database_structures import ConsumerDBMS, ProducerDBMS, TopicDBMS, MessageDBMS
-import psycopg2
 
 class MessageQueueSystem:
     def __init__(self,persistent):
         if persistent:
-            self.conn = psycopg2.connect(database = "mqsdb", user = "postgres", password = "mayank", 
-                                host = "127.0.0.1", port = "5432")
+            self.conn = psycopg2.connect(database = DATABASE, user = USER, password = PASSWORD, 
+                                host = HOST, port = PORT)
             self.cur=self.conn.cursor()
 
             self.consumer_table = ConsumerDBMS(self.conn, self.cur)
