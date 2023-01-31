@@ -15,4 +15,10 @@ class ConsumerTable:
         cur_consumer_id = self.consumer_id_auto_inc+1
         self.consumer_id_auto_inc += 1
         self.create_consumer(cur_consumer_id,topic_name)
-        return cur_consumer_id
+        temp = []
+        temp.append(cur_consumer_id)
+        return temp
+    
+    def increase_offset(self, consumer_id):
+        self.consumer_entry[consumer_id].cur_topic_queue_offset += 1
+        return self.consumer_entry[consumer_id].cur_topic_queue_offset-1

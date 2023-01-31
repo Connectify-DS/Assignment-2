@@ -3,8 +3,17 @@ from flask import request
 from flask import jsonify
 from message_queue_system import MessageQueueSystem
 
-mqs = MessageQueueSystem(persistent=False)
+IS_PERSISTENT = False
+mqs = MessageQueueSystem(persistent=IS_PERSISTENT)
 app = Flask(__name__)
+
+@app.before_first_request
+def create_tables():
+    if IS_PERSISTENT:
+        mqs.message_table.create_table()
+        mqs.consumer_table.create_table()
+        mqs.producer_table.create_table()
+        mqs.topic_table.create_table()
 
 @app.route('/')
 def index():
@@ -14,7 +23,6 @@ def index():
 def createTopic():
     req = request.json
     topicName = req['topic_name']
-    print(topicName)
     try:
         mqs.create_topic(topic_name=topicName)
         resp = {
@@ -53,7 +61,7 @@ def registerConsumer():
         consumerId = mqs.register_consumer(topic_name=topicName)
         resp = {
             "status": "success",
-            "consumer_id": consumerId,
+            "consumer_id": consumerId[0],
         }
         return jsonify(resp)
     except Exception as e:
@@ -109,7 +117,7 @@ def retrieve():
         message = mqs.dequeue(topic_name=topicName, consumer_id=consumerId)
         resp = {
             "status": "success",
-            "message": str(message),
+            "message": str(message.message),
         }
         return jsonify(resp)
     except Exception as e:

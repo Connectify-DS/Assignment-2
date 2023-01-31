@@ -3,14 +3,13 @@ import psycopg2
 from models import Consumer
 
 class ConsumerDBMS:
-    def __init__(self):
-        self.conn = psycopg2.connect(database = "mqsdb", user = "postgres", password = "mayank", 
-                                host = "127.0.0.1", port = "5432")
-        self.cur=self.conn.cursor()
+    def __init__(self, conn, cur):
+        self.conn=conn
+        self.cur=cur
 
     def create_table(self):
         self.cur.execute("""
-            CREATE TABLE CONSUMERS(
+            CREATE TABLE IF NOT EXISTS CONSUMERS(
             ID SERIAL PRIMARY KEY NOT NULL,
             TOPIC TEXT NOT NULL,
             OFSET INT NOT NULL);
@@ -25,7 +24,7 @@ class ConsumerDBMS:
             RETURNING ID
         """,(topic_name,))
 
-        consumer_id=self.cur.fetchone()[0]
+        consumer_id=self.cur.fetchone()
         
         self.conn.commit()
 
@@ -35,7 +34,7 @@ class ConsumerDBMS:
         self.cur.execute("""
             SELECT * FROM CONSUMERS
             WHERE ID = %s
-        """,(consumer_id),)
+        """,(consumer_id,))
 
         try:
             row=self.cur.fetchone()
@@ -49,6 +48,23 @@ class ConsumerDBMS:
                 topic_name=row[1],
                 cur_topic_queue_offset=row[2]
             )
+    
+    def increase_offset(self, consumer_id):
+        self.cur.execute("""
+            UPDATE CONSUMERS
+            SET OFSET = OFSET + 1
+            WHERE ID = %s
+        """,(consumer_id,))
+
+        self.conn.commit()
+
+        self.cur.execute("""
+            SELECT OFSET FROM CONSUMERS
+            WHERE ID = %s
+        """,(consumer_id,))
+
+        row=self.cur.fetchone()[0]
+        return row-1
 
 if __name__=="__main__":
     dbms=ConsumerDBMS()

@@ -3,14 +3,13 @@ import psycopg2
 from models import Message
 
 class MessageDBMS:
-    def __init__(self):
-        self.conn = psycopg2.connect(database = "mqsdb", user = "postgres", password = "mayank", 
-                                host = "127.0.0.1", port = "5432")
-        self.cur=self.conn.cursor()
+    def __init__(self, conn, cur):
+        self.conn = conn
+        self.cur=cur
 
     def create_table(self):
         self.cur.execute("""
-            CREATE TABLE MESSAGES(
+            CREATE TABLE IF NOT EXISTS MESSAGES(
             ID SERIAL PRIMARY KEY NOT NULL,
             MESSAGE TEXT NOT NULL);
         """)
