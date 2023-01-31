@@ -1,5 +1,3 @@
-import psycopg2
-
 from models import Message
 
 class MessageDBMS:

@@ -1,0 +1,5 @@
+USER = 'postgres'
+PASSWORD = 'mayank'
+DATABASE = 'mqsdb'
+HOST = '127.0.0.1'
+PORT = '5432'
