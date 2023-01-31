@@ -15,7 +15,7 @@ class MyConsumer:
                 print(f"Consumer already registered to {topic_name}")
                 continue
             
-            subscribe_url = self.broker + "consumer/register"
+            subscribe_url = self.broker + "/consumer/register"
 
             data = {"topic_name" : topic_name}
 
@@ -29,7 +29,7 @@ class MyConsumer:
             
             subscribe_response = r.json()
 
-            if subscribe_response["status"] == "Success":
+            if subscribe_response["status"] == "success":
                 consumer_id = subscribe_response["consumer_id"]
                 self.id_topic_map[topic_name] = consumer_id
 
@@ -49,7 +49,7 @@ class MyConsumer:
         
         response = r.json()
         
-        if response["status"] == "Success":
+        if response["status"] == "success":
             print("Active Topics : ")
             for topic_name in response["topics"]:
                 print(topic_name)
@@ -80,7 +80,7 @@ class MyConsumer:
 
         response = r.json()
 
-        if response["status"] == "Success":
+        if response["status"] == "success":
             print("Message recieved successfully")
 
         else:
@@ -104,7 +104,7 @@ class MyConsumer:
         
         response = r.json()
 
-        if response["status"] == "Success":
+        if response["status"] == "success":
             consumer_id = response["consumer_id"]
             self.id_topic_map[topic_name] = consumer_id
         return         

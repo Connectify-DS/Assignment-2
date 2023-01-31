@@ -23,7 +23,7 @@ class ServerFunctions:
 
         response = r.json()
 
-        if response["status"] == "Success":
+        if response["status"] == "success":
             print(f"Topic : {topic_name} created successfully")
         else:
             print(f"Topic : {topic_name} ERROR in creation")
@@ -44,8 +44,9 @@ class ServerFunctions:
             print(f"HTTP error:{errcon}")
         
         topic_response = r.json()
+        
 
-        if topic_response["status"] == "Success":
+        if topic_response["status"] == "success":
             topic_list = topic_response["topics"]
             print("Active Topics : ")
             for topics in topic_list:

@@ -28,7 +28,7 @@ class MyProducer:
             
             producer_response = r.json()
 
-            if producer_response["status"] == "Success":
+            if producer_response["status"] == "success":
                 producer_id = producer_response["producer_id"]
                 self.id_topic_map[topic] = producer_id
 
@@ -49,7 +49,7 @@ class MyProducer:
         
         producer_response = r.json()
 
-        if producer_response["status"] == "Success":
+        if producer_response["status"] == "success":
             producer_id = producer_response["producer_id"]
             self.id_topic_map[topic] = producer_id
 
@@ -79,7 +79,7 @@ class MyProducer:
 
         response = r.json()
 
-        if response["status"] == "Success":
+        if response["status"] == "success":
             print("Message sent successfully")
         else:
             print(f"Failed, {response['message']}")
