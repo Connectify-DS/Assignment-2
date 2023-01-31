@@ -3,7 +3,6 @@ from myqueue import *
 broker = "http://127.0.0.1:5000"
 server = ServerFunctions(broker)
 
-#Creating Topics
 server.CreateTopic("Test_Topic_1")
 server.CreateTopic("Test_Topic_2")
 server.ListTopics()
