@@ -1,7 +1,12 @@
 # DS-Connectify
 
-1. Modify the configurations in `config.py` file for PostgreSQL
-2. Create a database named `mqsdb` in postgres using the command `create database mqsdb;`
-3. To run the code using the persistent layer, ensure that `IS_PERSISTENT` in app.py is `True`
-4. To run the code without using persistent layer, ensure that `IS_PERSISTENT` in app.py is `False`
-5. Execute `python app.py` to start the server
+• Modify the configurations in `config.py` file for PostgreSQL\
+• Create a database named `mqsdb` in postgres using the command `create database mqsdb;`
+
+The files `unit_test1.py` and `unit_test2.py` tests the in-memory and database structures respectively\
+These can be run directly using `python unit_test1.py` or `python unit_test2.py`
+
+• Run `python app.py` to start the server\
+• To use the persistent layer, ensure that `IS_PERSISTENT` in app.py is `True`\
+• To run without persistent layer, ensure that `IS_PERSISTENT` in app.py is `False`\
+• Run `python Test_Main.py` to test the main code
