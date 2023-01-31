@@ -1,3 +1,6 @@
+"""
+Flask app to create a message queue system
+"""
 from flask import Flask
 from flask import request
 from flask import jsonify
@@ -7,20 +10,28 @@ IS_PERSISTENT = True
 mqs = MessageQueueSystem(persistent=IS_PERSISTENT)
 app = Flask(__name__)
 
+# Create tables if persistent
 @app.before_first_request
 def create_tables():
+    """
+    Create tables if persistent
+    """
     if IS_PERSISTENT:
         mqs.message_table.create_table()
         mqs.consumer_table.create_table()
         mqs.producer_table.create_table()
         mqs.topic_table.create_table()
 
+# Routes
 @app.route('/')
 def index():
     return "DS-Connectify", 200
 
 @app.route('/topics', methods=['POST'])
 def createTopic():
+    """
+    Create a topic
+    """
     req = request.json
     topicName = req['topic_name']
     try:
@@ -39,6 +50,9 @@ def createTopic():
 
 @app.route('/topics', methods=['GET'])
 def listTopic():
+    """
+    List all topics
+    """
     try:
         topics = mqs.list_topics()
         resp = {
@@ -55,6 +69,9 @@ def listTopic():
 
 @app.route('/consumer/register', methods=['POST'])
 def registerConsumer():
+    """
+    Register a consumer
+    """
     req = request.json
     topicName = req['topic_name']
     try:
@@ -91,6 +108,9 @@ def registerProducer():
 
 @app.route('/producer/produce', methods=['POST'])
 def publish():
+    """
+    Publish a message to the queue
+    """
     req = request.json
     topicName = req['topic_name']
     producerID = req['producer_id']
@@ -110,6 +130,9 @@ def publish():
 
 @app.route('/consumer/consume', methods=['GET'])
 def retrieve():
+    """
+    Retrieve a message from the queue
+    """
     req = request.json
     topicName = req['topic_name']
     consumerId = req['consumer_id']
@@ -129,6 +152,9 @@ def retrieve():
 
 @app.route('/size', methods=['GET'])
 def getSize():
+    """
+    Get the size of the queue
+    """
     req = request.json
     topicName = req['topic_name']
     consumerId = req['consumer_id']

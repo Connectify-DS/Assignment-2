@@ -4,25 +4,35 @@ from in_memory_structures import ConsumerTable, ProducerTable, TopicTable, Messa
 from database_structures import ConsumerDBMS, ProducerDBMS, TopicDBMS, MessageDBMS
 
 class MessageQueueSystem:
+    """
+    This class is the main class of the system. It is responsible for the creation of topics,
+    registering producers and consumers, and the enqueueing and dequeueing of messages.
+    """
     def __init__(self,persistent):
         self.persistent = persistent
         if persistent:
+            # Connect to the database
             self.conn = psycopg2.connect(database = DATABASE, user = USER, password = PASSWORD, 
                                 host = HOST, port = PORT)
             self.cur=self.conn.cursor()
 
+            # Create the tables if they don't exist
             self.consumer_table = ConsumerDBMS(self.conn, self.cur)
             self.message_table = MessageDBMS(self.conn, self.cur)
             self.producer_table = ProducerDBMS(self.conn, self.cur)
             self.topic_table = TopicDBMS(self.conn, self.cur)
 
         else:
+            # Create the tables if they don't exist in memory
             self.consumer_table = ConsumerTable()
             self.message_table = MessageTable()
             self.producer_table = ProducerTable()
             self.topic_table = TopicTable()
 
     def create_topic(self, topic_name: str):
+        """
+        Creates a new topic with the given name.
+        """
         try:
             topics = self.list_topics()
             if topic_name in topics:
@@ -32,15 +42,24 @@ class MessageQueueSystem:
             raise e
 
     def list_topics(self):
+        """
+        Returns a list of all the topics in the system.
+        """
         return self.topic_table.get_topic_list()
 
     def register_producer(self, topic_name: str):
+        """
+        Registers a new producer to the given topic.
+        """
         topics = self.list_topics()
         if topic_name not in topics:
             self.create_topic(topic_name)
         return self.producer_table.register_new_producer_to_topic(topic_name)
         
     def enqueue(self, topic_name: str, producer_id: int, message: str):
+        """
+        Enqueues a new message to the given topic.
+        """
         try:
             topics = self.list_topics()
             if topic_name not in topics:
@@ -49,6 +68,7 @@ class MessageQueueSystem:
             raise e
 
         try:
+            # Check if the producer is registered to the topic
             producer = self.producer_table.get_producer(producer_id)
             if producer.producer_topic != topic_name:
                 raise Exception("This Topic is not registered under this Id")
@@ -60,6 +80,9 @@ class MessageQueueSystem:
         
 
     def register_consumer(self, topic_name: str):
+        """
+        Registers a new consumer to the given topic.
+        """
         try:
             topics = self.list_topics()
             if topic_name not in topics:
@@ -69,6 +92,9 @@ class MessageQueueSystem:
             raise e
 
     def dequeue(self, topic_name: str, consumer_id: int):
+        """
+        Removes the next message from the given topic.
+        """
         try:
 
             topics = self.list_topics()
@@ -99,6 +125,9 @@ class MessageQueueSystem:
             raise e
 
     def size(self, topic: str, consumer_id: int):
+        """
+        Returns the number of messages left to be dequeued by the given consumer.
+        """
         try:
             consumer = self.consumer_table.get_consumer(consumer_id)
             if consumer.topic_name != topic:

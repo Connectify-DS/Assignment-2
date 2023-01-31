@@ -1,3 +1,6 @@
+"""
+Test for then DB Structure for Consumers.
+"""
 from database_structures import *
 from config import *
 import psycopg2
