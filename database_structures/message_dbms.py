@@ -38,7 +38,3 @@ class MessageDBMS:
         return Message(
                 message=row[1]
             )
-
-if __name__=="__main__":
-    dbms=MessageDBMS()
-    dbms.create_table()

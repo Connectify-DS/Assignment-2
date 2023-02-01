@@ -95,7 +95,3 @@ class TopicQueueDBMS:
             return 0
         else:
             return len(row[0])
-
-if __name__=="__main__":
-    dbms=TopicDBMS()
-    dbms.create_table()

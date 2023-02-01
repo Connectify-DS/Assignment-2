@@ -44,7 +44,3 @@ class ProducerDBMS:
                 producer_id=row[0],
                 producer_topic=row[1]
             )
-
-if __name__=="__main__":
-    dbms=ProducerDBMS()
-    dbms.create_table()

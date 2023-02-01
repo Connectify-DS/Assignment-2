@@ -63,7 +63,3 @@ class ConsumerDBMS:
 
         row=self.cur.fetchone()[0]
         return row-1
-
-if __name__=="__main__":
-    dbms=ConsumerDBMS()
-    dbms.create_table()
