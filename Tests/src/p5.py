@@ -14,7 +14,7 @@ base_url = f"http://{HOST}:{PORT}"
 
 p1 = MyProducer(topics=["T-1", "T-2", "T-3"], broker=base_url)
 
-with open("Tests/test_asgn1/producer_1.txt", "r") as f:
+with open("Tests/test_asgn1/producer_5.txt", "r") as f:
     for line in f:
         line=line.strip()
         topic = line.split('\t')[-1]
