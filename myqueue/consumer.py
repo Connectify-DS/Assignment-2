@@ -18,6 +18,7 @@ class MyConsumer:
             subscribe_url = self.broker + "/consumer/register"
 
             data = {"topic_name" : topic_name}
+            r = None
 
             try:
                 r = requests.post(subscribe_url, json = data)
@@ -26,6 +27,10 @@ class MyConsumer:
                 print(f"HTTP error:{errhttp}")
             except requests.exceptions.ConnectionError as errcon :
                 print(f"HTTP error:{errcon}")
+        
+            if r is None:
+                print(f"Null Response")
+                return
             
             subscribe_response = r.json()
 
@@ -39,6 +44,7 @@ class MyConsumer:
 
         topics_url = self.base_url +  "/topics"
         data = {"topic_name" : topic_name}
+        r = None
 
         try:
             r = requests.get(topics_url, json = data)
@@ -47,6 +53,10 @@ class MyConsumer:
             print ("Http Error:",errh)
         except requests.exceptions.ConnectionError as errc:
             print ("Error Connecting:",errc)
+        
+        if r is None:
+            print(f"Null Response")
+            return
         
         response = r.json()
         
@@ -70,6 +80,7 @@ class MyConsumer:
             "topic_name" : topic_name, 
             "consumer_id": self.id_topic_map[topic_name]
         }
+        r = None
         
         try:
             r = requests.get(consume_url, json = data)
@@ -78,6 +89,10 @@ class MyConsumer:
             print(f"HTTP error:{errhttp}")
         except requests.exceptions.ConnectionError as errcon :
             print(f"HTTP error:{errcon}")
+        
+        if r is None:
+            print(f"Null Response")
+            return
 
         response = r.json()
 
@@ -94,6 +109,7 @@ class MyConsumer:
 
         register_url = self.broker +  "/consumer/register"
         data = {"topic_name" : topic_name}
+        r = None
         
         try:
             r = requests.post(register_url, json = data)
@@ -102,6 +118,10 @@ class MyConsumer:
             print ("Http Error:",errh)
         except requests.exceptions.ConnectionError as errc:
             print ("Error Connecting:",errc)
+        
+        if r is None:
+            print(f"Null Response")
+            return
         
         response = r.json()
 
@@ -116,6 +136,7 @@ class MyConsumer:
             "topic_name" : topic_name, 
             "consumer_id": self.id_topic_map[topic_name]
         }
+        r = None
         
         try:
             r = requests.get(register_url, json = data)
@@ -124,6 +145,10 @@ class MyConsumer:
             print ("Http Error:",errh)
         except requests.exceptions.ConnectionError as errc:
             print ("Error Connecting:",errc)
+        
+        if r is None:
+            print(f"Null Response")
+            return
         
         response = r.json()
 

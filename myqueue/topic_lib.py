@@ -11,6 +11,7 @@ class ServerFunctions:
 
         topic_url = self.broker + "/topics"
         data = {"topic_name": topic_name}
+        r = None
 
         try:
             r = requests.post(topic_url, json = data)
@@ -20,6 +21,10 @@ class ServerFunctions:
             print(f"HTTP error:{errhttp}")
         except requests.exceptions.ConnectionError as errcon :
             print(f"HTTP error:{errcon}")
+        
+        if r is None:
+            print(f"Null Response")
+            return
 
         response = r.json()
 
@@ -33,6 +38,7 @@ class ServerFunctions:
 
         topics_url = self.broker + "/topics"
         data = {"topic_name": ""}
+        r = None
 
         try:
             r = requests.get(topics_url, json = data)
@@ -42,6 +48,10 @@ class ServerFunctions:
             print(f"HTTP error:{errhttp}")
         except requests.exceptions.ConnectionError as errcon :
             print(f"HTTP error:{errcon}")
+        
+        if r is None:
+            print(f"Null Response")
+            return
         
         topic_response = r.json()
         
