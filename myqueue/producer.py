@@ -18,6 +18,7 @@ class MyProducer:
             if topic in self.id_topic_map.keys():
                 continue
             data = {"topic_name" : topic}
+            r = None
             try:
                 r = requests.post(producer_url, json = data)
                 r.raise_for_status()
@@ -25,6 +26,10 @@ class MyProducer:
                 print(f"HTTP error:{errhttp}")
             except requests.exceptions.ConnectionError as errcon :
                 print(f"HTTP error:{errcon}")
+        
+            if r is None:
+                print(f"Null Response")
+                return
             
             producer_response = r.json()
 
@@ -40,6 +45,8 @@ class MyProducer:
         if topic in self.id_topic_map.keys():
             return 
         data = {"topic_name" : topic}
+        r = None
+
         try:
             r = requests.post(producer_url, json = data)
             r.raise_for_status()
@@ -47,6 +54,10 @@ class MyProducer:
             print(f"HTTP error:{errhttp}")
         except requests.exceptions.ConnectionError as errcon :
             print(f"HTTP error:{errcon}")
+        
+        if r is None:
+            print(f"Null Response")
+            return
         
         producer_response = r.json()
 
@@ -70,6 +81,7 @@ class MyProducer:
             "producer_id" : self.id_topic_map[topic], 
             "message" : message 
         }
+        r = None
 
         try:
             r = requests.post(send_url, json = data)
@@ -78,6 +90,10 @@ class MyProducer:
             print(f"HTTP error:{errhttp}")
         except requests.exceptions.ConnectionError as errcon :
             print(f"HTTP error:{errcon}")
+        
+        if r is None:
+            print(f"Null Response")
+            return
 
         response = r.json()
 
