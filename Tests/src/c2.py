@@ -8,8 +8,13 @@ import random
 c2 = MyConsumer(topics=["T-1",  "T-3"], broker=base_url)
 
 while True:
-    print(c2.get_next("T-1"))
+    x = c2.get_next("T-1")
+    if x is not None:
+        print(x)
     sleep(random.uniform(0, 0.5))
-    print(c2.get_next("T-3"))
+    y = c2.get_next("T-3")
+    if y is not None:
+        print(y)
     sleep(random.uniform(0, 0.5))
-    
+    if x is None and y is None:
+        break
