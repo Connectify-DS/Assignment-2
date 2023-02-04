@@ -33,6 +33,12 @@ def createTopic():
     Create a topic
     """
     req = request.json
+    if req is None:
+        resp = {
+            "status": "failure",
+            "message": "Required fields absent in request",
+        }
+        return jsonify(resp), 400
     topicName = req['topic_name']
     try:
         mqs.create_topic(topic_name=topicName)
@@ -73,6 +79,12 @@ def registerConsumer():
     Register a consumer
     """
     req = request.json
+    if req is None:
+        resp = {
+            "status": "failure",
+            "message": "Required fields absent in request",
+        }
+        return jsonify(resp), 400
     topicName = req['topic_name']
     try:
         consumerId = mqs.register_consumer(topic_name=topicName)
@@ -91,6 +103,12 @@ def registerConsumer():
 @app.route('/producer/register', methods=['POST'])
 def registerProducer():
     req = request.json
+    if req is None:
+        resp = {
+            "status": "failure",
+            "message": "Required fields absent in request",
+        }
+        return jsonify(resp), 400
     topicName = req['topic_name']
     try:
         producerId = mqs.register_producer(topic_name=topicName)
@@ -112,6 +130,12 @@ def publish():
     Publish a message to the queue
     """
     req = request.json
+    if req is None:
+        resp = {
+            "status": "failure",
+            "message": "Required fields absent in request",
+        }
+        return jsonify(resp), 400
     topicName = req['topic_name']
     producerID = req['producer_id']
     message = req['message']
@@ -134,6 +158,12 @@ def retrieve():
     Retrieve a message from the queue
     """
     req = request.json
+    if req is None:
+        resp = {
+            "status": "failure",
+            "message": "Required fields absent in request",
+        }
+        return jsonify(resp), 400
     topicName = req['topic_name']
     consumerId = req['consumer_id']
     try:
@@ -156,6 +186,12 @@ def getSize():
     Get the size of the queue
     """
     req = request.json
+    if req is None:
+        resp = {
+            "status": "failure",
+            "message": "Required fields absent in request",
+        }
+        return jsonify(resp), 400
     topicName = req['topic_name']
     consumerId = req['consumer_id']
     try:

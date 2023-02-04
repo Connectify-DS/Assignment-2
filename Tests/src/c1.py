@@ -8,9 +8,17 @@ base_url = f"http://{HOST}:{PORT}"
 c1 = MyConsumer(topics=["T-1", "T-2", "T-3"], broker=base_url)
 
 while True:
-    print(c1.get_next("T-1"))
+    x = c1.get_next("T-1")
+    if x is not None:
+        print(x)
     sleep(random.uniform(0, 0.5))
-    print(c1.get_next("T-2"))
+    y = c1.get_next("T-2")
+    if y is not None:
+        print(y)
     sleep(random.uniform(0, 0.5))
-    print(c1.get_next("T-3"))
+    z = c1.get_next("T-3")
+    if z is not None:
+        print(z)
     sleep(random.uniform(0, 0.5))
+    if x is None and y is None and z is None:
+        break

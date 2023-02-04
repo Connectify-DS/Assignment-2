@@ -10,7 +10,7 @@ class MessageQueueSystem:
     """
     def __init__(self,persistent):
         self.persistent = persistent
-        if persistent:
+        if self.persistent:
             # Connect to the database
             self.conn = psycopg2.connect(database = DATABASE, user = USER, password = PASSWORD, 
                                 host = HOST, port = PORT)
@@ -62,14 +62,17 @@ class MessageQueueSystem:
         """
         try:
             topics = self.list_topics()
+            if topics is None:
+                raise Exception("No topic registered")
             if topic_name not in topics:
                 raise Exception("Topic does not exist")
         except Exception as e:
             raise e
 
         try:
-            # Check if the producer is registered to the topic
             producer = self.producer_table.get_producer(producer_id)
+            if producer is None:
+                raise Exception(f"Invalid producer id {producer_id}")
             if producer.producer_topic != topic_name:
                 raise Exception("This Topic is not registered under this Id")
             topic_queue = self.topic_table.get_topic_queue(topic_name)
@@ -96,8 +99,9 @@ class MessageQueueSystem:
         Removes the next message from the given topic.
         """
         try:
-
             topics = self.list_topics()
+            if topics is None:
+                raise Exception("No topic registered")
             if topic_name not in topics:
                 raise Exception("Topic does not exist")
             size_rem = self.size(topic_name, consumer_id)
@@ -108,6 +112,8 @@ class MessageQueueSystem:
         
         try:
             consumer = self.consumer_table.get_consumer(consumer_id)
+            if consumer is None:
+                raise Exception(f"Invalid consumer id {consumer_id}")
             topicName = consumer.topic_name
             ofset = self.consumer_table.increase_offset(consumer_id)
             topic_queue = self.topic_table.get_topic_queue(topic_name)
