@@ -76,6 +76,8 @@ class MessageQueueSystem:
             if producer.producer_topic != topic_name:
                 raise Exception("This Topic is not registered under this Id")
             topic_queue = self.topic_table.get_topic_queue(topic_name)
+            if topic_queue is None:
+                raise Exception(f"Topic name {topic_name} not found")
             message_id = self.message_table.add_message(message)
             topic_queue.enqueue(message_id)
         except Exception as e:
@@ -117,6 +119,8 @@ class MessageQueueSystem:
             topicName = consumer.topic_name
             ofset = self.consumer_table.increase_offset(consumer_id)
             topic_queue = self.topic_table.get_topic_queue(topic_name)
+            if topic_queue is None:
+                raise Exception(f"Topic name {topic_name} not found")
             if topicName != topic_name:
                 raise Exception("This Topic is not subscribed under this Id")
             else:
