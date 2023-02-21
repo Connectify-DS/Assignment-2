@@ -15,7 +15,11 @@ base_url = f"http://{HOST}:{PORT}"
 p1 = MyProducer(topics=["T-1", "T-2", "T-3"], broker=base_url)
 
 with open("Tests/test_asgn1/producer_1.txt", "r") as f:
+    i=0
     for line in f:
+        i+=1
+        # if i>10:
+            # break
         line=line.strip()
         topic = line.split('\t')[-1]
         message= '\t'.join(line.split('\t')[:-1])

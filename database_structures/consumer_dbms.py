@@ -27,6 +27,7 @@ class ConsumerDBMS:
         """,(topic_name,))
 
             consumer_id=self.cur.fetchone()
+            # print(consumer_id)
             
             self.conn.commit()
             return consumer_id

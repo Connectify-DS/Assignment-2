@@ -1,4 +1,5 @@
 import psycopg2
+import threading
 from config import *
 from in_memory_structures import ConsumerTable, ProducerTable, TopicTable, MessageTable
 from database_structures import ConsumerDBMS, ProducerDBMS, TopicDBMS, MessageDBMS
@@ -21,6 +22,11 @@ class MessageQueueSystem:
             self.message_table = MessageDBMS(self.conn, self.cur)
             self.producer_table = ProducerDBMS(self.conn, self.cur)
             self.topic_table = TopicDBMS(self.conn, self.cur)
+            self.reset_dbms()
+
+            self.register_lock=threading.Lock()
+            self.enqueue_lock=threading.Lock()
+            self.deque_lock=threading.Lock()
 
         else:
             # Create the tables if they don't exist in memory
@@ -28,6 +34,21 @@ class MessageQueueSystem:
             self.message_table = MessageTable()
             self.producer_table = ProducerTable()
             self.topic_table = TopicTable()
+
+    def reset_dbms(self):
+    
+        self.cur.execute("""
+            DROP TABLE IF EXISTS CONSUMERS, PRODUCERS, MESSAGES, TOPICS;
+        """)
+
+        self.conn.commit()
+
+        self.consumer_table.create_table()
+        self.producer_table.create_table()
+        self.message_table.create_table()
+        self.topic_table.create_table()
+
+        self.conn.commit()
 
     def create_topic(self, topic_name: str):
         """
@@ -51,22 +72,28 @@ class MessageQueueSystem:
         """
         Registers a new producer to the given topic.
         """
+        self.register_lock.acquire()
         topics = self.list_topics()
         if topic_name not in topics:
             self.create_topic(topic_name)
-        return self.producer_table.register_new_producer_to_topic(topic_name)
+        id=self.producer_table.register_new_producer_to_topic(topic_name)
+        self.register_lock.release()
+        return id
         
     def enqueue(self, topic_name: str, producer_id: int, message: str):
         """
         Enqueues a new message to the given topic.
         """
+        self.enqueue_lock.acquire()
         try:
             topics = self.list_topics()
+            # print(topics, topic_name)
             if topics is None:
                 raise Exception("No topic registered")
             if topic_name not in topics:
                 raise Exception("Topic does not exist")
         except Exception as e:
+            self.enqueue_lock.release()
             raise e
 
         try:
@@ -80,26 +107,33 @@ class MessageQueueSystem:
                 raise Exception(f"Topic name {topic_name} not found")
             message_id = self.message_table.add_message(message)
             topic_queue.enqueue(message_id)
+            self.enqueue_lock.release()
         except Exception as e:
+            self.enqueue_lock.release()
             raise e
         
-
     def register_consumer(self, topic_name: str):
         """
         Registers a new consumer to the given topic.
         """
+        self.register_lock.acquire()
         try:
             topics = self.list_topics()
             if topic_name not in topics:
                 raise Exception("Topic does not exist")
-            return self.consumer_table.register_to_topic(topic_name)
+            id = self.consumer_table.register_to_topic(topic_name)
+            self.register_lock.release()
+            return id
         except Exception as e:
+            self.register_lock.release()
+            # print(e)
             raise e
 
     def dequeue(self, topic_name: str, consumer_id: int):
         """
         Removes the next message from the given topic.
         """
+        self.deque_lock.acquire()
         try:
             topics = self.list_topics()
             if topics is None:
@@ -110,6 +144,7 @@ class MessageQueueSystem:
             if size_rem == 0:
                 raise Exception("No messages left to retrieve")
         except Exception as e:
+            self.deque_lock.release()
             raise e
         
         try:
@@ -130,8 +165,11 @@ class MessageQueueSystem:
                     message_id = consumer.get_next_message(topic_queue, ofset)
                 if message_id:
                     message_data = self.message_table.get_message(message_id)
+                    self.deque_lock.release()
                     return message_data
+            self.deque_lock.release()
         except Exception as e:
+            self.deque_lock.release()
             raise e
 
     def size(self, topic: str, consumer_id: int):

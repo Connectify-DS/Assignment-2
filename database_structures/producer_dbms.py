@@ -31,6 +31,7 @@ class ProducerDBMS:
 
             return producer_id
         except:
+            print("Error while registering producer")
             self.conn.rollback()
 
     def get_producer(self,producer_id):
@@ -51,5 +52,6 @@ class ProducerDBMS:
                     producer_id=row[0],
                     producer_topic=row[1]
                 )
-        except:
+        except Exception as e:
+            print(e)
             self.conn.rollback()

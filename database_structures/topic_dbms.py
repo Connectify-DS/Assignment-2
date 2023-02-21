@@ -54,6 +54,7 @@ class TopicDBMS:
             """,(topic_name,))
 
             row=self.cur.fetchone()
+            # print("In Get Topic Queue, Topic Name = ",row)
 
             return TopicQueueDBMS(
                 topic_name=row[1],

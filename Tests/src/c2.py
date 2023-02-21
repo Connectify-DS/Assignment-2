@@ -7,7 +7,9 @@ import random
 
 c2 = MyConsumer(topics=["T-1",  "T-3"], broker=base_url)
 
-while True:
+i=0
+while i<=10:
+    i+=1
     x = c2.get_next("T-1")
     if x is not None:
         print(x)
