@@ -1,9 +1,16 @@
 from models import Consumer
+import psycopg2
+import sys
+sys.path.append("..")
+from config import *
+import threading
 
 class ConsumerDBMS:
-    def __init__(self, conn, cur):
-        self.conn=conn
-        self.cur=cur
+    def __init__(self, conn, cur,lock):
+        self.conn = psycopg2.connect(database = DATABASE, user = USER, password = PASSWORD, 
+                                host = HOST, port = PORT)
+        self.cur=self.conn.cursor()
+        self.lock=threading.Lock()
 
     def create_table(self):
         try:
@@ -19,6 +26,7 @@ class ConsumerDBMS:
             self.conn.rollback()
 
     def register_to_topic(self,topic_name):
+        self.lock.acquire()
         try:
             self.cur.execute("""
             INSERT INTO CONSUMERS (TOPIC,OFSET) 
@@ -30,12 +38,14 @@ class ConsumerDBMS:
             # print(consumer_id)
             
             self.conn.commit()
+            self.lock.release()
             return consumer_id
         except:
             self.conn.rollback()
-
+            self.lock.release()
 
     def get_consumer(self,consumer_id):
+        self.lock.acquire()
         try:
             self.cur.execute("""
                 SELECT * FROM CONSUMERS
@@ -49,15 +59,19 @@ class ConsumerDBMS:
             except Exception as e:
                 raise e
 
-            return Consumer(
+            c= Consumer(
                     consumer_id=row[0],
                     topic_name=row[1],
                     cur_topic_queue_offset=row[2]
                 )
+            self.lock.release()
+            return c
         except:
             self.conn.rollback()
+            self.lock.release()
     
     def increase_offset(self, consumer_id):
+        self.lock.acquire()
         try:
             self.cur.execute("""
                 UPDATE CONSUMERS
@@ -73,6 +87,8 @@ class ConsumerDBMS:
             """,(consumer_id,))
 
             row=self.cur.fetchone()[0]
+            self.lock.release()
             return row-1
         except:
             self.conn.rollback()
+            self.lock.release()

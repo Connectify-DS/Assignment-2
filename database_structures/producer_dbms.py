@@ -1,9 +1,16 @@
 from models import Producer
+import psycopg2
+import sys
+sys.path.append("..")
+from config import *
+import threading
 
 class ProducerDBMS:
-    def __init__(self, conn, cur):
-        self.conn = conn
-        self.cur=cur
+    def __init__(self, conn, cur,lock):
+        self.conn = psycopg2.connect(database = DATABASE, user = USER, password = PASSWORD, 
+                                host = HOST, port = PORT)
+        self.cur=self.conn.cursor()
+        self.lock=threading.Lock()
 
     def create_table(self):
         try:
@@ -18,6 +25,7 @@ class ProducerDBMS:
             self.conn.rollback()
 
     def register_new_producer_to_topic(self,topic_name):
+        self.lock.acquire()
         try:
             self.cur.execute("""
                 INSERT INTO PRODUCERS (TOPIC) 
@@ -28,13 +36,15 @@ class ProducerDBMS:
             producer_id=self.cur.fetchone()[0]
             
             self.conn.commit()
-
+            self.lock.release()
             return producer_id
         except:
-            print("Error while registering producer")
+            # print("Error while registering producer")
             self.conn.rollback()
+            self.lock.release()
 
     def get_producer(self,producer_id):
+        self.lock.acquire()
         try:
             self.cur.execute("""
                 SELECT * FROM PRODUCERS
@@ -48,10 +58,13 @@ class ProducerDBMS:
             except Exception as e:
                 raise e
             
-            return Producer(
+            p= Producer(
                     producer_id=row[0],
                     producer_topic=row[1]
                 )
+            self.lock.release()
+            return p
         except Exception as e:
-            print(e)
+            # print(e)
             self.conn.rollback()
+            self.lock.release()

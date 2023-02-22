@@ -1,7 +1,14 @@
 """
 Runners for the consumers and producers in the message queue system with In-Memory Structures.
 """
+import psycopg2
+import threading
+from config import *
 
+# psycopg2.connect(database = DATABASE, user = USER, password = PASSWORD, 
+#                                 host = HOST, port = PORT)
+# psycopg2.connect(database = DATABASE, user = USER, password = PASSWORD, 
+#                                 host = HOST, port = PORT)                                
 from message_queue_system import MessageQueueSystem
 
 message_queue_system = MessageQueueSystem(persistent=True)
