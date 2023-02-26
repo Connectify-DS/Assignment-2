@@ -3,6 +3,9 @@ import psycopg2
 from in_memory_structures import TopicTable, MessageTable
 from database_structures import TopicDBMS, MessageDBMS
 
+from sqlalchemy import create_engine
+from sqlalchemy_utils import database_exists, create_database
+
 ## Make Different Database for Each Server: Send a config object
 class Broker:
     """
@@ -11,37 +14,34 @@ class Broker:
     """
     def __init__(self,config):
         if config['IS_PERSISTENT']:
+            engine=create_engine(f"postgresql://{config['USER']}:{config['PASSWORD']}@{config['HOST']}:{config['PORT']}/{config['DATABASE']}")
+            if not database_exists(engine.url):
+                create_database(engine.url)
+            if(database_exists(engine.url)):
+                print(f"Database {config['DATABASE']} Created/Exists")
+            else:
+                raise Exception("Database Could not be created")
             # Connect to the database
             self.conn = psycopg2.connect(database = config['DATABASE'], user = config['USER'], password = config['PASSWORD'], 
                                 host = config['HOST'], port = config['PORT'])
             self.cur=self.conn.cursor()
-            # self.lock=threading.Lock()
-
-            # print("Done")
 
             # Create the tables if they don't exist
-            # self.consumer_table = ConsumerDBMS(self.conn, self.cur,self.lock)
             self.message_table = MessageDBMS(config)
-            # self.producer_table = ProducerDBMS()
             self.topic_table = TopicDBMS(config)
 
         else:
             # Create the tables if they don't exist in memory
-            # self.consumer_table = ConsumerTable()
             self.message_table = MessageTable()
-            # self.producer_table = ProducerTable()
             self.topic_table = TopicTable()
 
     def reset_dbms(self):
-    
         self.cur.execute("""
             DROP TABLE IF EXISTS MESSAGES, TOPICS;
         """)
 
         self.conn.commit()
 
-        # self.consumer_table.create_table()
-        # self.producer_table.create_table()
         self.message_table.create_table()
         self.topic_table.create_table()
 
@@ -64,16 +64,6 @@ class Broker:
         Returns a list of all the topics in the system.
         """
         return self.topic_table.get_topic_list()
-
-    # def register_producer(self, topic_name: str):
-    #     """
-    #     Registers a new producer to the given topic.
-    #     """
-    #     topics = self.list_topics()
-    #     if topic_name not in topics:
-    #         self.create_topic(topic_name)
-    #     id=self.producer_table.register_new_producer_to_topic(topic_name)
-    #     return id
         
     def enqueue(self, topic_name: str, message: str):
         """
@@ -98,20 +88,6 @@ class Broker:
         except Exception as e:
             raise e
         
-    # def register_consumer(self, topic_name: str):
-    #     """
-    #     Registers a new consumer to the given topic.
-    #     """
-    #     try:
-    #         topics = self.list_topics()
-    #         if topic_name not in topics:
-    #             raise Exception("Topic does not exist")
-    #         id = self.consumer_table.register_to_topic(topic_name)
-    #         return id
-    #     except Exception as e:
-    #         # print(e)
-    #         raise e
-
     def dequeue(self, topic_name: str,offset: int):
         """
         Removes the next message from the given topic.
