@@ -1,4 +1,5 @@
 IS_PERSISTENT: True
+SERVER_PORT: 2000
 USER: postgres
 PASSWORD: mayank
 DATABASE: mqsdb2
