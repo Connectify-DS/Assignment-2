@@ -11,7 +11,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-c', '--config', help='config file path', type=str)
 args = parser.parse_args()
-
+config=None
 with open(args.config) as f:
     config = yaml.safe_load(f)
 
@@ -138,4 +138,4 @@ def retrieve():
         return jsonify(resp), 400
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True,port=config['SERVER_PORT'])

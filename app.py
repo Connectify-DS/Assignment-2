@@ -87,6 +87,7 @@ def registerConsumer():
         return jsonify(resp), 400
     topicName = req['topic_name']
     try:
+        # TODO: Change this Function Call
         consumerId = mqs.register_consumer(topic_name=topicName)
         resp = {
             "status": "success",
@@ -111,6 +112,7 @@ def registerProducer():
         return jsonify(resp), 400
     topicName = req['topic_name']
     try:
+        # TODO: Change this Function Call
         producerId = mqs.register_producer(topic_name=topicName)
         resp = {
             "status": "success",
