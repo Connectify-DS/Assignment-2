@@ -50,10 +50,10 @@ def addTopic():
         return jsonify(resp), 400
     try:
         topic_name = req['topic_name']
-        pid, bid = wm.add_topic(topic_name=topic_name)
+        _ = wm.add_topic(topic_name=topic_name)
         resp = {
             "status": "success",
-            "message": f'Partition ID {pid} added to Broker ID {bid}',
+            "message": f'Topic {topic_name} created: {_}',
         }
         return jsonify(resp), 200
     except Exception as e:
@@ -93,10 +93,10 @@ def addPartition():
         return jsonify(resp), 400
     try:
         topic_name = req['topic_name']
-        pid, bid = wm.add_partition(topic_name=topic_name)
+        _ = wm.add_partition(topic_name=topic_name)
         resp = {
             "status": "success",
-            "message": f'Partition ID {pid} added to Broker ID {bid}',
+            "message": f'Partition created for {topic_name}: {_}',
         }
         return jsonify(resp), 200
     except Exception as e:
@@ -143,10 +143,10 @@ def publish():
         producer_id = req['producer_id']
         topic_name = req['topic_name']
         message = req['message']
-        partition_id = wm.produce_message(producer_id=producer_id, topic_name=topic_name, message=message)
+        _ = wm.produce_message(producer_id=producer_id, topic_name=topic_name, message=message)
         resp = {
             "status": "success",
-            "message": f'Producer ID {producer_id} published in Partition ID {partition_id}',
+            "message": f'Producer ID {producer_id} published in topic {topic_name}',
         }
         return jsonify(resp), 200
     except Exception as e:
