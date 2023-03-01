@@ -1,0 +1,6 @@
+IS_PERSISTENT: True
+USER: postgres
+PASSWORD: mayank
+DATABASE: mqsdb3
+HOST: 127.0.0.1
+PORT: 5432

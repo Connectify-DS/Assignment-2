@@ -4,23 +4,29 @@ Flask app to create a message queue system
 from flask import Flask
 from flask import request
 from flask import jsonify
-from models.broker import Broker
+from models import Broker
+import yaml
+import argparse
 
-IS_PERSISTENT = True
-mqs = Broker(persistent=IS_PERSISTENT)
+parser = argparse.ArgumentParser()
+parser.add_argument('-c', '--config', help='config file path', type=str)
+args = parser.parse_args()
+
+with open(args.config) as f:
+    config = yaml.safe_load(f)
+
+mqs = Broker(config=config)
 app = Flask(__name__)
 
-# Create tables if persistent
+# Create tables if persistent: Use only for testing. During actual runs. Tables should not
+# be dropped and recreated
 @app.before_first_request
 def create_tables():
     """
     Create tables if persistent
     """
-    if IS_PERSISTENT:
-        mqs.message_table.create_table()
-        mqs.consumer_table.create_table()
-        mqs.producer_table.create_table()
-        mqs.topic_table.create_table()
+    if config['IS_PERSISTENT']:
+        mqs.reset_dbms()
 
 # Routes
 @app.route('/')
@@ -73,57 +79,6 @@ def listTopic():
         }
         return jsonify(resp), 400
 
-@app.route('/consumer/register', methods=['POST'])
-def registerConsumer():
-    """
-    Register a consumer
-    """
-    req = request.json
-    if req is None:
-        resp = {
-            "status": "failure",
-            "message": "Required fields absent in request",
-        }
-        return jsonify(resp), 400
-    topicName = req['topic_name']
-    try:
-        consumerId = mqs.register_consumer(topic_name=topicName)
-        resp = {
-            "status": "success",
-            "consumer_id": consumerId[0],
-        }
-        return jsonify(resp), 200
-    except Exception as e:
-        resp = {
-            "status": "failure",
-            "message": str(e),
-        }
-        return jsonify(resp), 400
-
-@app.route('/producer/register', methods=['POST'])
-def registerProducer():
-    req = request.json
-    if req is None:
-        resp = {
-            "status": "failure",
-            "message": "Required fields absent in request",
-        }
-        return jsonify(resp), 400
-    topicName = req['topic_name']
-    try:
-        producerId = mqs.register_producer(topic_name=topicName)
-        resp = {
-            "status": "success",
-            "producer_id": producerId,
-        }
-        return jsonify(resp), 200
-    except Exception as e:
-        resp = {
-            "status": "failure",
-            "message": str(e),
-        }
-        return jsonify(resp), 400
-
 @app.route('/producer/produce', methods=['POST'])
 def publish():
     """
@@ -136,11 +91,13 @@ def publish():
             "message": "Required fields absent in request",
         }
         return jsonify(resp), 400
+    
+    ## Check whether producer ID is valid and it is registered under the topic in the Broker Manager
     topicName = req['topic_name']
-    producerID = req['producer_id']
     message = req['message']
+    
     try:
-        mqs.enqueue(topic_name=topicName, producer_id=producerID, message=message)
+        mqs.enqueue(topic_name=topicName, message=message)
         resp = {
             "status": "success",
         }
@@ -165,40 +122,12 @@ def retrieve():
         }
         return jsonify(resp), 400
     topicName = req['topic_name']
-    consumerId = req['consumer_id']
+    offset = req['offset']
     try:
-        message = mqs.dequeue(topic_name=topicName, consumer_id=consumerId)
+        message = mqs.dequeue(topic_name=topicName, offset=int(offset))
         resp = {
             "status": "success",
             "message": str(message.message),
-        }
-        return jsonify(resp), 200
-    except Exception as e:
-        resp = {
-            "status": "failure",
-            "message": str(e),
-        }
-        return jsonify(resp), 400
-
-@app.route('/size', methods=['GET'])
-def getSize():
-    """
-    Get the size of the queue
-    """
-    req = request.json
-    if req is None:
-        resp = {
-            "status": "failure",
-            "message": "Required fields absent in request",
-        }
-        return jsonify(resp), 400
-    topicName = req['topic_name']
-    consumerId = req['consumer_id']
-    try:
-        queuesize = mqs.size(topic=topicName, consumer_id=consumerId)
-        resp = {
-            "status": "success",
-            "size": queuesize,
         }
         return jsonify(resp), 200
     except Exception as e:

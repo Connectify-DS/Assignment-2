@@ -5,9 +5,9 @@ from config import *
 import threading
 
 class TopicDBMS:
-    def __init__(self, conn, cur,lock):
-        self.conn = psycopg2.connect(database = DATABASE, user = USER, password = PASSWORD, 
-                                host = HOST, port = PORT)
+    def __init__(self,config):
+        self.conn = psycopg2.connect(database = config['DATABASE'], user = config['USER'], password = config['PASSWORD'], 
+                                host = config['HOST'], port = config['PORT'])
         self.cur=self.conn.cursor()
         self.lock=threading.Lock()
 
