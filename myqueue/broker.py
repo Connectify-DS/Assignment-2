@@ -59,7 +59,7 @@ class MyBroker:
        
     # Publish Message to Topic
     # Returns True on Success
-    def publish_message(self, topic_name,message):
+    def publish_message(self, topic_name, message):
         publish_url = self.base_url +  "/producer/produce"
         data = {"topic_name" : topic_name,
                 'message': message}
