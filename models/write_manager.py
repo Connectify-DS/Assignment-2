@@ -53,6 +53,7 @@ class writeManager:
         # Create Instance of MyBroker Class with base url (LOCALHOST:PORT) to send requests
         # new_broker = MyBroker(LOCALHOST:PORT) -> self.brokers.append(new_broker)
         self.broker_port[self.num_brokers] = port
+        return broker_id
 
     def add_topic(self, topic_name):
         ## Need to send request to read manager too.
@@ -74,6 +75,7 @@ class writeManager:
         partition_id = topic_name + ".1"
         self.partition_broker[partition_id] = curr_id
         self.topic_numPartitions[topic_name] = 1
+        return partition_id, curr_id
 
     def add_partition(self,topic_name):
         ## Need to send request to read manager too.
@@ -86,7 +88,7 @@ class writeManager:
         partition_id = topic_name + "." + self.topic_numPartitions[topic_name]
         self.partition_broker[partition_id] = curr_id
         #Send request to broker server for creating new partition
-
+        return partition_id, curr_id
 
     def list_topics(self):
         """
@@ -109,8 +111,7 @@ class writeManager:
 
         self.num_producers += 1
         self.producer_topic[self.num_producers] = topic_name 
-
-        
+        return self.num_producers
 
     def produce_message(self,producer_id,topic_name,message):
         # Check if Producer can publish to the topic.
@@ -131,7 +132,7 @@ class writeManager:
         curr_broker = self.partition_broker[partition_id]
         curr_port = self.broker_port[curr_broker]
         #send request to broker for enque message
-
+        return partition_id
 
     def health_check(self):
         # This function will check the last use time of the producers and log whether 
