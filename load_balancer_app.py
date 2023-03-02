@@ -8,11 +8,11 @@ import requests
 import argparse
 import yaml
 
-parser = argparse.ArgumentParser()
-parser.add_argument('-c', '--config', help='config file path', type=str)
-args = parser.parse_args()
+# parser = argparse.ArgumentParser()
+# parser.add_argument('-c', '--config', help='config file path', type=str)
+# args = parser.parse_args()
 config=None
-with open(args.config) as f:
+with open('configs/load_balancer.yaml') as f:
     config = yaml.safe_load(f)
 
 app = Flask(__name__)
@@ -27,11 +27,22 @@ def handle_request(url,data,forward_to,method="POST"):
     Code to handle post requests to Write Manager or Read Manager URL. 
     Made a function to reduce redundancy
     """
+    print(3)
     try:   
         if method=="GET":
-            r = requests.get(url, json = data)
+            print(2)
+            print(data)
+            if data==None:
+                print(1)
+                r = requests.get(url, verify=False)
+            else:
+                r = requests.get(url, json = data, verify=False)
+
         elif method=="POST":
-            r = requests.post(url, json = data)
+            if data==None:
+                r = requests.post(url, verify=False)
+            else:
+                r = requests.post(url, json = data, verify=False)
         r.raise_for_status()
     except requests.exceptions.HTTPError as errh:
         resp={
@@ -97,7 +108,31 @@ def listTopics():
     List all the created topics
     """
     wm_request_url = config['WRITE_MANAGER_URL'] +  "/topics"
-    return handle_request(wm_request_url,request.json,"Write Manager","GET")
+    print(wm_request_url)
+    # print(request.json)
+    r = handle_request(wm_request_url,None,"Write Manager","GET")
+    return r
+    # list_url = self.base_url + "/topics"
+    # r = None
+    
+    # try:
+    #     r = requests.get(list_url)
+    #     r.raise_for_status()
+    # except requests.exceptions.HTTPError as errhttp :
+    #     print(f"HTTP error:{errhttp}")
+    # except requests.exceptions.ConnectionError as errcon :
+    #     print(f"HTTP error:{errcon}")
+    
+    # if r is None:
+    #     print(f"Null Response")
+    #     return
+
+    # response = r.json()
+
+    # if response["status"] == "success":
+    #     return response['topics']
+    # else:
+    #     print(f"Failed to list topics")
 
 @app.route('/producer/register',methods=['POST'])
 def registerProducer():
@@ -115,4 +150,5 @@ def produceMessage():
     wm_request_url = config['WRITE_MANAGER_URL'] +  "/producer/produce"
     return handle_request(wm_request_url,request.json,"Write Manager")
   
-   
+if __name__ == "__main__":
+    app.run(debug=True,port=config['SERVER_PORT'])

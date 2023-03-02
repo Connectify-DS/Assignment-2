@@ -16,20 +16,17 @@ class MyBroker:
             r.raise_for_status()
         except requests.exceptions.HTTPError as errh:
             print ("Http Error:",errh)
+            raise errh
         except requests.exceptions.ConnectionError as errc:
             print ("Error Connecting:",errc)
+            raise errc
         
         if r is None:
-            print(f"Null Response")
-            return False
+            raise Exception("Null response")
         
         response = r.json()
         
-        if response["status"] == "success":
-            print("Topic Created")
-            return True
-        else:
-            return False
+        return response
         
 
     # list topics in the broker
