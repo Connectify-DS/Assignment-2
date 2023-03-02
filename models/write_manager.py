@@ -17,6 +17,7 @@ import os
 class writeManager:
     def __init__(self, config, init_brokers = 2):
         self.topics = []
+        self.topics_offset = {}
         self.partition_broker = {}      #Partition -> Broker ID
         self.topic_numPartitions = {}  #Topic -> num_partition
         # self.broker_port = {}  #Broker ID -> Broker
@@ -96,6 +97,7 @@ class writeManager:
             raise e
 
         self.topics.append(topic_name)
+        self.topics_offset[topic_name] = 0
         #Selecting random broker
         curr_id = random.choice(self.brokerId)
         curr_broker = self.brokers[curr_id]
@@ -162,7 +164,9 @@ class writeManager:
         except Exception as e:
             raise e
 
-        curr_partition = random.randint(1,self.topic_numPartitions[topic_name])
+        # curr_partition = random.randint(1,self.topic_numPartitions[topic_name])
+        curr_partition = self.topics_offset[topic_name]%self.topic_numPartitions[topic_name] + 1
+        self.topics_offset[topic_name] = (self.topics_offset[topic_name] + 1)%self.topic_numPartitions[topic_name]
         partition_id = topic_name + "." + str(curr_partition)
 
         curr_id = self.partition_broker[partition_id]
