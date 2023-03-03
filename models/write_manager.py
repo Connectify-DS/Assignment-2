@@ -75,6 +75,7 @@ class writeManager:
         
         #start a new server
         os.system('python3 ../broker_app.py -c ../configs/broker{broker_id}.yaml')
+        return broker_id
 
     def add_topic(self, topic_name):
         ## Need to send request to read manager too.
@@ -137,6 +138,7 @@ class writeManager:
 
         self.num_producers += 1
         self.producer_topic[self.num_producers] = topic_name
+        return self.num_producers
 
 
 
