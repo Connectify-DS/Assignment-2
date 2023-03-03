@@ -19,8 +19,7 @@ class writeManager:
         self.topics = []
         self.partition_broker = {}      #Partition -> Broker ID
         self.topic_numPartitions = {}  #Topic -> num_partition
-        # self.broker_port = {}  #Broker ID -> Broker
-        self.brokers = {} ## List of id to MyBroker Class
+        self.broker_port = {} ## List of id to broker_port
         self.brokerId = []
         self.producer_topic = {}
 
@@ -63,11 +62,10 @@ class writeManager:
         self.brokerId.append(broker_id)
         # Create new broker server here: By Running Flask App
         # Create Instance of MyBroker Class with base url (LOCALHOST:PORT) to send requests
-        # new_broker = MyBroker(LOCALHOST:PORT) -> self.brokers.append(new_broker)
+        # new_broker = MyBroker(LOCALHOST:PORT) -> self.broker_port.append(new_broker)
         port = self.curr_port
-        curr_broker = MyBroker(f"http://127.0.0.1:{port}")
         self.curr_port += 100
-        self.brokers[broker_id] = curr_broker
+        self.broker_port[broker_id] = port
 
         #generate yaml file
         config = {'IS_PERSISTENT': self.ispersistent,
@@ -98,29 +96,30 @@ class writeManager:
         self.topics.append(topic_name)
         #Selecting random broker
         curr_id = random.choice(self.brokerId)
-        curr_broker = self.brokers[curr_id]
-
+        broker_port = self.broker_port[curr_id]
+        url = "https://127.0.0.1:" + str(broker_port)
         #Send topic and partition request to broker server port with following partition id
         partition_id = topic_name + ".1"
         self.partition_broker[partition_id] = curr_id
         self.topic_numPartitions[topic_name] = 1
 
-        return curr_broker.create_topic(partition_id)
+        return MyBroker.create_topic(url, partition_id)
 
 
     def add_partition(self,topic_name):
         ## Need to send request to read manager too.
         # Choose a Broker (Round Robin / Random)
         # Create the partition by calling create_topic of MyBroker instance
-        curr_id = random.choice(self.brokers)
-        curr_broker = self.brokers(curr_id)
+        curr_id = random.choice(self.broker_port)
+        broker_port = self.broker_port(curr_id)
+        url = "https://127.0.0.1:" + str(broker_port)
 
         self.topic_numPartitions[topic_name] += 1
         partition_id = topic_name + "." + self.topic_numPartitions[topic_name]
         self.partition_broker[partition_id] = curr_id
         #Send request to broker server for creating new partition
 
-        curr_broker.create_topic(partition_id)
+        MyBroker.create_topic(url, partition_id)
         return partition_id
 
 
@@ -157,7 +156,6 @@ class writeManager:
         ## Health Check: 
         #       Update the last use time of the producer based on the producer id
         if producer_id not in self.producer_topic:
-            print("yes")
             raise Exception("Invalid ProducerId")
         if self.producer_topic[producer_id] != topic_name:
             raise Exception("ProducerId is not subscribed to the topic")
@@ -166,10 +164,11 @@ class writeManager:
         partition_id = topic_name + "." + str(curr_partition)
 
         curr_id = self.partition_broker[partition_id]
-        curr_broker = self.brokers[curr_id]
+        broker_port = self.broker_port[curr_id]
+        url = "https://127.0.0.1:" + str(broker_port)
         #send request to broker for enque message
  
-        return curr_broker.publish_message(partition_id, message)
+        return MyBroker.publish_message(url, partition_id, message)
 
 
     def health_check(self):

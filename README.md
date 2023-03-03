@@ -20,3 +20,8 @@ These can be run directly using `python unit_test1.py` or `python unit_test2.py`
 • To use the persistent layer, ensure that `IS_PERSISTENT` in app.py is `True`\
 • To run without persistent layer, ensure that `IS_PERSISTENT` in app.py is `False`\
 • Run `python Test_Main.py` to test the main code
+
+TODO:
+Ishan:
+- [ ] handle requests from wm to rm
+- [ ] make rm app server
