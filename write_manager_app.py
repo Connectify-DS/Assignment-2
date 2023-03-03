@@ -50,11 +50,7 @@ def addTopic():
         return jsonify(resp), 400
     try:
         topic_name = req['topic_name']
-        _ = wm.add_topic(topic_name=topic_name)
-        resp = {
-            "status": "success",
-            "message": f'Topic {topic_name} created: {_}',
-        }
+        resp = wm.add_topic(topic_name=topic_name)
         return jsonify(resp), 200
     except Exception as e:
         resp = {
@@ -93,10 +89,10 @@ def addPartition():
         return jsonify(resp), 400
     try:
         topic_name = req['topic_name']
-        _ = wm.add_partition(topic_name=topic_name)
+        partition_id = wm.add_partition(topic_name=topic_name)
         resp = {
             "status": "success",
-            "message": f'Partition created for {topic_name}: {_}',
+            "message": f'Partition created for {topic_name}: {partition_id}',
         }
         return jsonify(resp), 200
     except Exception as e:

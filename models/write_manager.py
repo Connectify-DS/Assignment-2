@@ -15,7 +15,7 @@ import os
 # Use MyBroker class from myqueue folder to create, publish, consume, list topics as that class
 # requests the broker server. Initialise it with the broker url. 
 class writeManager:
-    def __init__(self, config, init_brokers = 1):
+    def __init__(self, config, init_brokers = 2):
         self.topics = []
         self.partition_broker = {}      #Partition -> Broker ID
         self.topic_numPartitions = {}  #Topic -> num_partition
@@ -24,9 +24,16 @@ class writeManager:
         self.producer_topic = {}
 
         self.num_producers = 0
-        self.num_brokers = init_brokers
+        self.num_brokers = 0
         self.ispersistent = config['IS_PERSISTENT']
         self.curr_port = 1000
+
+        ##HARD CODING BROKERS
+        for i in range(init_brokers):
+            self.brokerId.append(i)
+            self.brokers[i] = MyBroker(f"http://127.0.0.1:{self.curr_port}")
+            self.curr_port += 100
+            self.num_brokers += 1
 
         if self.ispersistent:
             # Connect to the database
@@ -37,7 +44,7 @@ class writeManager:
             # Create the tables if they don't exist
             # self.consumer_table = ConsumerDBMS(self.conn, self.cur) In Read Manager
             # self.message_table = MessageDBMS(self.conn, self.cur) In Broker
-            self.producer_table = ProducerDBMS(self.conn, self.cur)
+            # self.producer_table = ProducerDBMS(self.conn, self.cur)
             # self.topic_table = TopicDBMS(self.conn, self.cur) In Broker
 
         else:
@@ -99,7 +106,6 @@ class writeManager:
         return MyBroker.create_topic(url, partition_id)
 
 
-
     def add_partition(self,topic_name):
         ## Need to send request to read manager too.
         # Choose a Broker (Round Robin / Random)
@@ -113,7 +119,8 @@ class writeManager:
         self.partition_broker[partition_id] = curr_id
         #Send request to broker server for creating new partition
 
-        return MyBroker.create_topic(url, partition_id)
+        MyBroker.create_topic(url, partition_id)
+        return partition_id
 
 
     def list_topics(self):
@@ -148,14 +155,13 @@ class writeManager:
 
         ## Health Check: 
         #       Update the last use time of the producer based on the producer id
-        try:
-            if self.producer_topic[producer_id] != topic_name:
-                raise Exception("ProducerId is not subscribed to the topic")
-        except Exception as e:
-            raise e
+        if producer_id not in self.producer_topic:
+            raise Exception("Invalid ProducerId")
+        if self.producer_topic[producer_id] != topic_name:
+            raise Exception("ProducerId is not subscribed to the topic")
 
-        curr_partition = random.randbytes(1,self.topic_numPartitions[topic_name])
-        partition_id = topic_name + "." + curr_partition
+        curr_partition = random.randint(1,self.topic_numPartitions[topic_name])
+        partition_id = topic_name + "." + str(curr_partition)
 
         curr_id = self.partition_broker[partition_id]
         broker_port = self.broker_port[curr_id]

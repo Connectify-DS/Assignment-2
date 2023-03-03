@@ -1,18 +1,22 @@
 """
 Flask app to create a message queue system
 """
-from flask import Flask
+from flask import Flask, redirect
 from flask import request
 from flask import jsonify
 import requests
 import argparse
+from urllib3.exceptions import InsecureRequestWarning
 import yaml
+from urllib3 import disable_warnings
 
-parser = argparse.ArgumentParser()
-parser.add_argument('-c', '--config', help='config file path', type=str)
-args = parser.parse_args()
+disable_warnings(InsecureRequestWarning)
+
+# parser = argparse.ArgumentParser()
+# parser.add_argument('-c', '--config', help='config file path', type=str)
+# args = parser.parse_args()
 config=None
-with open(args.config) as f:
+with open('configs/load_balancer.yaml') as f:
     config = yaml.safe_load(f)
 
 app = Flask(__name__)
@@ -29,20 +33,32 @@ def handle_request(url,data,forward_to,method="POST"):
     """
     try:   
         if method=="GET":
-            r = requests.get(url, json = data)
+            if data==None:
+                r = requests.get(url)
+            else:
+                r = requests.get(url, json = data)
         elif method=="POST":
-            r = requests.post(url, json = data)
+            if data==None:
+                r = requests.post(url)
+            else:
+                r = requests.post(url, json = data)
         r.raise_for_status()
     except requests.exceptions.HTTPError as errh:
+        if errh.response.status_code==400:
+            resp={
+                "status": "failure",
+                "message": f"{forward_to} Failed: "+ str(errh.response.json()["message"])
+            }
+            return jsonify(resp),400
         resp={
             "status": "failure",
-            "message": str(errh),
+            "message": "HTTP Error: "+str(errh),
         }
         return jsonify(resp),400
     except requests.exceptions.ConnectionError as errc:
         resp={
             "status": "failure",
-            "message": str(errc),
+            "message": "HTTP Connection Error: "+str(errc),
         }
         return jsonify(resp),400
 
@@ -55,11 +71,7 @@ def handle_request(url,data,forward_to,method="POST"):
     
     response = r.json()
     if response["status"] == "success":
-        resp={
-            "status": "success",
-            "message": response["message"]
-        }
-        return jsonify(resp), 200
+        return jsonify(response), 200
     else:
         resp={
             "status": "failure",
@@ -97,7 +109,7 @@ def listTopics():
     List all the created topics
     """
     wm_request_url = config['WRITE_MANAGER_URL'] +  "/topics"
-    return handle_request(wm_request_url,request.json,"Write Manager","GET")
+    return handle_request(wm_request_url,None,"Write Manager","GET")
 
 @app.route('/producer/register',methods=['POST'])
 def registerProducer():
@@ -115,4 +127,5 @@ def produceMessage():
     wm_request_url = config['WRITE_MANAGER_URL'] +  "/producer/produce"
     return handle_request(wm_request_url,request.json,"Write Manager")
   
-   
+if __name__ == "__main__":
+    app.run(debug=True,port=config['SERVER_PORT'])

@@ -23,6 +23,8 @@ class readManager:
         self.num_consumers = 1
         self.ispersistent = config['IS_PERSISTENT']
 
+        ###HARD CODING BROKERS
+
         if self.ispersistent:
             # Connect to the database
             self.conn = psycopg2.connect(database = config['DATABASE'], user = config['USER'], password = config['PASSWORD'], 
