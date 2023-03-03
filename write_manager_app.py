@@ -53,6 +53,7 @@ def addTopic():
         resp = wm.add_topic(topic_name=topic_name)
         return jsonify(resp), 200
     except Exception as e:
+        print(e)
         resp = {
             "status": "failure",
             "message": str(e),

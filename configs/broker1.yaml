@@ -1,4 +1,4 @@
-IS_PERSISTENT: False
+IS_PERSISTENT: True
 SERVER_PORT: 1000
 USER: postgres
 PASSWORD: mayank

@@ -22,7 +22,7 @@ class MyBroker:
         
         response = r.json()
         if response["status"]=="failure":
-            raise Exception(f"{self.base_url}: Failed to create topic")
+            raise Exception(f"{url}: Failed to create topic")
         return response
         
 
@@ -46,7 +46,7 @@ class MyBroker:
 
         response = r.json()
         if response["status"]=="failure":
-            raise Exception(f"{self.base_url}: Failed to create topic")
+            raise Exception(f"{url}: Failed to create topic")
         return response
        
     # Publish Message to Topic
@@ -72,7 +72,7 @@ class MyBroker:
         response = r.json()
 
         if response["status"]=="failure":
-            raise Exception(f"{self.base_url}: Failed to publish message")
+            raise Exception(f"{url}: Failed to publish message")
         return response
     
     # Recieve Message Of Topic
@@ -98,7 +98,7 @@ class MyBroker:
         response = r.json()
 
         if response["status"]=="failure":
-            raise Exception(f"{self.base_url}: Failed to consume message")
+            raise Exception(f"{url}: Failed to consume message")
         return response
      
 

@@ -31,7 +31,7 @@ class writeManager:
         ##HARD CODING BROKERS
         for i in range(init_brokers):
             self.brokerId.append(i)
-            self.brokers[i] = MyBroker(f"http://127.0.0.1:{self.curr_port}")
+            self.broker_port[i] = self.curr_port
             self.curr_port += 100
             self.num_brokers += 1
 
@@ -87,22 +87,19 @@ class writeManager:
         # Check if topic already exists
         # Create first partition for the topic by requesting a MyBroker instance (create_topic method)
         # Handle Metadata of Write Manager
-        try:
-            if topic_name in self.topics:
-                raise Exception("Topic already exists")
-        except Exception as e:
-            raise e
+        # if topic_name in self.topics:
+        #     raise Exception("Topic already exists")
+
 
         self.topics.append(topic_name)
         #Selecting random broker
         curr_id = random.choice(self.brokerId)
         broker_port = self.broker_port[curr_id]
-        url = "https://127.0.0.1:" + str(broker_port)
+        url = "http://127.0.0.1:" + str(broker_port)
         #Send topic and partition request to broker server port with following partition id
         partition_id = topic_name + ".1"
         self.partition_broker[partition_id] = curr_id
         self.topic_numPartitions[topic_name] = 1
-
         return MyBroker.create_topic(url, partition_id)
 
 
@@ -112,7 +109,7 @@ class writeManager:
         # Create the partition by calling create_topic of MyBroker instance
         curr_id = random.choice(self.broker_port)
         broker_port = self.broker_port(curr_id)
-        url = "https://127.0.0.1:" + str(broker_port)
+        url = "http://127.0.0.1:" + str(broker_port)
 
         self.topic_numPartitions[topic_name] += 1
         partition_id = topic_name + "." + self.topic_numPartitions[topic_name]
@@ -165,7 +162,7 @@ class writeManager:
 
         curr_id = self.partition_broker[partition_id]
         broker_port = self.broker_port[curr_id]
-        url = "https://127.0.0.1:" + str(broker_port)
+        url = "http://127.0.0.1:" + str(broker_port)
         #send request to broker for enque message
  
         return MyBroker.publish_message(url, partition_id, message)
