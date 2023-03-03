@@ -1,6 +1,6 @@
 import psycopg2
 from config import *
-from broker import broker
+import random
 from in_memory_structures import ConsumerTable, ProducerTable, TopicTable, MessageTable
 from database_structures import ConsumerDBMS, ProducerDBMS, TopicDBMS, MessageDBMS
 # TODO:
@@ -11,12 +11,15 @@ from database_structures import ConsumerDBMS, ProducerDBMS, TopicDBMS, MessageDB
 # Use MyBroker class from myqueue folder to create, publish, consume, list topics as that class
 # requests the broker server. Initialise it with the broker url. 
 class readManager:
-    def __init__(self, config,init_brokers = 1):
+    def __init__(self, config):
+        self.topics = []
         self.partition_broker = {}
         self.topic_numPartitions = {}
         self.broker_port = {}
-        self.brokers=[] ## List of instances of MyBroker Class
-        self.num_brokers = init_brokers
+        self.consumer_topic = {}
+        self.offsets = {}
+
+        self.num_consumers = 1
         self.ispersistent = config['IS_PERSISTENT']
 
         if self.ispersistent:
@@ -37,20 +40,12 @@ class readManager:
             # self.message_table = MessageTable()
             # self.producer_table = ProducerTable()
             # self.topic_table = TopicTable()
-        
-    def add_broker(self,port):
-        # port = insert random port
-        self.num_brokers += 1
-        # Create new broker server here: By Running Flask App
-        # Create Instance of MyBroker Class with base url (LOCALHOST:PORT) to send requests
-        # new_broker = MyBroker(LOCALHOST:PORT) -> self.brokers.append(new_broker)
-        self.broker_port[self.num_brokers] = port
 
     def add_topic(self, topic_name):
         # Handle Metadata of Read Manager -> Do not request broker
-        pass
+        self.topics.append(topic_name)
 
-    def add_partition(self,topic_name):
+    def add_partition(self, topic_name):
         # Handle Metadata of Read Manager -> Do not request broker
         # This function may not be useful. 
         pass
@@ -60,7 +55,7 @@ class readManager:
         Returns a list of all the topics in the system.
         """
         # Return from Metadata of Read Manager
-        pass
+        return self.topics
 
     def register_consumer(self,topic_name):
         # Check if Topic Exists. If not Return Error
@@ -71,7 +66,16 @@ class readManager:
         #       Add new consumer to the healthcheck list with the ID
         #       Save the current time (time.datetime) as the time of creation
         #       You will also have to maintain the last use time (currently empty)
-        pass
+        try:
+            if topic_name not in self.topics:
+                raise Exception("Topic doesn't exist")
+        except Exception as e:
+            raise e
+    
+        consumer_id = self.num_consumers
+        self.num_consumers += 1
+        self.consumer_topic[consumer_id]
+
 
     def consume_message(self,consumer_id,topic_name):
         # Check if Topic is subscribed by consumer can publish to the topic.
@@ -81,7 +85,16 @@ class readManager:
 
         ## Health Check: 
         #       Update the last use time of the consumer based on the consumer id
-        pass
+        try:
+            if self.consumer_topic[consumer_id] != topic_name:
+                raise Exception("Topic not subscribed")
+        except Exception as e:
+            raise e
+
+        #assign partition
+        partition_no = random.randbytes(1,self.topic_numPartitions[topic_name])
+        partition_id = topic_name + "." + partition_no
+
 
     def health_check(self):
         # This function will check the last use time of the consumers and log whether 
