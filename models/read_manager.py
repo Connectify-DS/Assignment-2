@@ -48,6 +48,7 @@ class readManager:
         self.topic_numPartitions[topic_name] = 1
 
     def add_partition(self, topic_name, partition_id, broker_id):
+
         # Handle Metadata of Read Manager -> Do not request broker
         # This function may not be useful. 
         self.partition_broker[partition_id] = broker_id
