@@ -1,13 +1,11 @@
 import requests
 
 class MyBroker:
-    def __init__(self, url):
-        self.base_url = url
-
     # consumer function to list all the topics  
     # Returns True on Success
-    def create_topic(self,topic_name:str):
-        topics_url = self.base_url +  "/topics"
+    @staticmethod
+    def create_topic(url:str, topic_name:str):
+        topics_url = url +  "/topics"
         data = {"topic_name" : topic_name}
         r = None
 
@@ -34,8 +32,9 @@ class MyBroker:
 
     # list topics in the broker
     # Returns None on Failure
-    def list_topics(self, topic_name):
-        list_url = self.base_url + "/topics"
+    @staticmethod
+    def list_topics(url:str, topic_name:str):
+        list_url = url + "/topics"
         r = None
         
         try:
@@ -59,8 +58,9 @@ class MyBroker:
        
     # Publish Message to Topic
     # Returns True on Success
-    def publish_message(self, topic_name, message):
-        publish_url = self.base_url +  "/producer/produce"
+    @staticmethod
+    def publish_message(url:str, topic_name:str, message:str):
+        publish_url = url +  "/producer/produce"
         data = {"topic_name" : topic_name,
                 'message': message}
         r = None
@@ -85,8 +85,9 @@ class MyBroker:
     
     # Recieve Message Of Topic
     # Returns None on Failure
-    def consume_message(self, topic_name:str,offset:int):
-        consume_url = self.base_url +  "/consumer/consume"
+    @staticmethod
+    def consume_message(url:str, topic_name:str, offset:int):
+        consume_url = url +  "/consumer/consume"
         data = {"topic_name" : topic_name,
                 'offset': str(offset)}
         r = None

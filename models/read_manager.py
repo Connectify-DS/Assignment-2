@@ -1,10 +1,11 @@
 import psycopg2
 from config import *
 import random
+from myqueue import MyBroker
 from in_memory_structures import ConsumerTable, ProducerTable, TopicTable, MessageTable
 from database_structures import ConsumerDBMS, ProducerDBMS, TopicDBMS, MessageDBMS
 # TODO:
-# Move list_topics register producer and register consumer 
+# Move list_topics register producer and register consumer
 # Write a MyReadManager class that sends requests to flask server
 
 # Note:
@@ -15,9 +16,9 @@ class readManager:
         self.topics = []
         self.partition_broker = {}
         self.topic_numPartitions = {}
-        self.broker_port = {}
         self.consumer_topic = {}
-        self.offsets = {}
+        self.broker_port = {}
+        self.offsets = {}       #offsets of each producer id
 
         self.num_consumers = 1
         self.ispersistent = config['IS_PERSISTENT']
@@ -44,11 +45,16 @@ class readManager:
     def add_topic(self, topic_name):
         # Handle Metadata of Read Manager -> Do not request broker
         self.topics.append(topic_name)
+        self.topic_numPartitions[topic_name] = 1
 
-    def add_partition(self, topic_name):
+    def add_partition(self, topic_name, partition_id, broker_id):
+
         # Handle Metadata of Read Manager -> Do not request broker
         # This function may not be useful. 
-        pass
+        self.partition_broker[partition_id] = broker_id
+        self.topic_numPartitions[topic_name] += 1
+
+
 
     def list_topics(self):
         """
@@ -75,6 +81,10 @@ class readManager:
         consumer_id = self.num_consumers
         self.num_consumers += 1
         self.consumer_topic[consumer_id]
+        self.offsets[consumer_id] = {}
+        for i in range(1,self.topic_numPartitions[topic_name]+1):
+            partition_id = topic_name + "." + str(i)
+            self.offsets[consumer_id][partition_id] = 0
 
 
     def consume_message(self,consumer_id,topic_name):
@@ -94,10 +104,15 @@ class readManager:
         #assign partition
         partition_no = random.randbytes(1,self.topic_numPartitions[topic_name])
         partition_id = topic_name + "." + partition_no
+        curr_id = self.partition_broker[partition_id]
+        broker_port = self.broker_port[curr_id]
+        url = "https://127.0.0.1:" + str(broker_port)
+        offset = self.offsets[consumer_id][partition_id]
+
+        return MyBroker.consume_message(url, partition_id, offset)
 
 
     def health_check(self):
         # This function will check the last use time of the consumers and log whether 
         # any consumer has not produced a message for a long time (set arbitrary threshold for now)
         pass
-
