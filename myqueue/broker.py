@@ -15,17 +15,16 @@ class MyBroker:
             r = requests.post(topics_url, json = data)
             r.raise_for_status()
         except requests.exceptions.HTTPError as errh:
-            print ("Http Error:",errh)
             raise errh
         except requests.exceptions.ConnectionError as errc:
-            print ("Error Connecting:",errc)
             raise errc
         
         if r is None:
             raise Exception("Null response")
         
         response = r.json()
-        
+        if response["status"]=="failure":
+            raise Exception(f"{self.base_url}: Failed to create topic")
         return response
         
 
@@ -39,20 +38,17 @@ class MyBroker:
             r = requests.get(list_url)
             r.raise_for_status()
         except requests.exceptions.HTTPError as errhttp :
-            print(f"HTTP error:{errhttp}")
+            raise errhttp
         except requests.exceptions.ConnectionError as errcon :
-            print(f"HTTP error:{errcon}")
+            raise errcon
         
         if r is None:
-            print(f"Null Response")
-            return
+            raise Exception("Null response")
 
         response = r.json()
-
-        if response["status"] == "success":
-            return response['topics']
-        else:
-            print(f"Failed to list topics")
+        if response["status"]=="failure":
+            raise Exception(f"{self.base_url}: Failed to create topic")
+        return response
        
     # Publish Message to Topic
     # Returns True on Success
@@ -66,19 +62,18 @@ class MyBroker:
             r = requests.post(publish_url, json = data)
             r.raise_for_status()
         except requests.exceptions.HTTPError as errh:
-            print ("Http Error:",errh)
+            raise errh
         except requests.exceptions.ConnectionError as errc:
-            print ("Error Connecting:",errc)
+            raise errc
         
         if r is None:
-            print(f"Null Response")
-            return False
+            raise Exception("Null response")
         
         response = r.json()
 
-        if response["status"] == "success":
-            return True
-        return False  
+        if response["status"]=="failure":
+            raise Exception(f"{self.base_url}: Failed to publish message")
+        return response
     
     # Recieve Message Of Topic
     # Returns None on Failure
@@ -92,18 +87,18 @@ class MyBroker:
             r = requests.get(consume_url, json = data)
             r.raise_for_status()
         except requests.exceptions.HTTPError as errh:
-            print ("Http Error:",errh)
+            raise errh
         except requests.exceptions.ConnectionError as errc:
-            print ("Error Connecting:",errc)
+            raise errc
         
         if r is None:
-            print(f"Null Response")
-            return
+            raise Exception("Null response")
         
         response = r.json()
 
-        if response["status"] == "success":
-            return response['message']
+        if response["status"]=="failure":
+            raise Exception(f"{self.base_url}: Failed to consume message")
+        return response
      
 
 

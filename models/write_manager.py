@@ -108,7 +108,6 @@ class writeManager:
         return curr_broker.create_topic(partition_id)
 
 
-
     def add_partition(self,topic_name):
         ## Need to send request to read manager too.
         # Choose a Broker (Round Robin / Random)
@@ -121,7 +120,8 @@ class writeManager:
         self.partition_broker[partition_id] = curr_id
         #Send request to broker server for creating new partition
 
-        return curr_broker.create_topic(partition_id)
+        curr_broker.create_topic(partition_id)
+        return partition_id
 
 
     def list_topics(self):
@@ -156,11 +156,11 @@ class writeManager:
 
         ## Health Check: 
         #       Update the last use time of the producer based on the producer id
-        try:
-            if self.producer_topic[producer_id] != topic_name:
-                raise Exception("ProducerId is not subscribed to the topic")
-        except Exception as e:
-            raise e
+        if producer_id not in self.producer_topic:
+            print("yes")
+            raise Exception("Invalid ProducerId")
+        if self.producer_topic[producer_id] != topic_name:
+            raise Exception("ProducerId is not subscribed to the topic")
 
         curr_partition = random.randint(1,self.topic_numPartitions[topic_name])
         partition_id = topic_name + "." + str(curr_partition)
