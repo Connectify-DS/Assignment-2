@@ -2,7 +2,7 @@ import psycopg2
 from config import *
 # from broker import broker
 from in_memory_structures import ConsumerTable, ProducerTable, TopicTable, MessageTable
-from database_structures import ConsumerDBMS, ProducerDBMS, TopicDBMS, MessageDBMS
+from database_structures import BrokerDBMS,TopicDBMS_WM,PartitionDMBS, ProducerDBMS
 from myqueue import MyBroker
 import random
 import yaml
@@ -24,15 +24,21 @@ class writeManager:
         self.brokerId = []
         self.producer_topic = {}
 
-        self.num_producers = 0
-        self.num_brokers = 0
+        self.topic_dbms=TopicDBMS_WM()
+        self.broker_dbms=BrokerDBMS()
+        self.partition_dbms=PartitionDMBS()
+        self.producer_dbms=ProducerDBMS()
+
+        self.num_producers = self.producer_dbms.get_num_producers()
+        self.num_brokers = self.broker_dbms.get_num_brokers()
         self.ispersistent = config['IS_PERSISTENT']
         self.curr_port = 1000
 
         ##HARD CODING BROKERS
         for i in range(init_brokers):
-            self.brokerId.append(i)
-            self.broker_port[i] = self.curr_port
+            id=self.broker_dbms.add_new_broker(self.curr_port)
+            # self.brokerId.append(i)
+            # self.broker_port[i] = self.curr_port
             self.curr_port += 100
             self.num_brokers += 1
 
@@ -59,14 +65,15 @@ class writeManager:
         ## Note: You will have to request read manager to add this broker too.
         # port = insert random port
         self.num_brokers += 1
-        broker_id = self.num_brokers
-        self.brokerId.append(broker_id)
+        # broker_id = self.num_brokers
+        # self.brokerId.append(broker_id)
         # Create new broker server here: By Running Flask App
         # Create Instance of MyBroker Class with base url (LOCALHOST:PORT) to send requests
         # new_broker = MyBroker(LOCALHOST:PORT) -> self.broker_port.append(new_broker)
         port = self.curr_port
         self.curr_port += 100
-        self.broker_port[broker_id] = port
+        # self.broker_port[broker_id] = port
+        broker_id=self.broker_dbms.add_new_broker(port)
 
         #generate yaml file
         config = {'IS_PERSISTENT': self.ispersistent,
@@ -92,34 +99,42 @@ class writeManager:
         #     raise Exception("Topic already exists")
 
 
-        self.topics.append(topic_name)
-        self.topics_offset[topic_name] = 0
+        # self.topics.append(topic_name)
+        # self.topics_offset[topic_name] = 0
+        # self.topic_numPartitions[topic_name] = 1
+        self.topic_dbms.add_topic(topic_name) ## do all above three here
         #Selecting random broker
-        curr_id = random.choice(self.brokerId)
-        broker_port = self.broker_port[curr_id]
+        # broker_id=random.choice(self.brokerId)
+        # broker_port = self.broker_port[curr_id]
+        broker_port,broker_id = self.broker_dbms.get_random_broker()
         url = "http://127.0.0.1:" + str(broker_port)
         #Send topic and partition request to broker server port with following partition id
-        partition_id = topic_name + ".1"
-        self.partition_broker[partition_id] = curr_id
-        self.topic_numPartitions[topic_name] = 1
-        return MyBroker.create_topic(url, partition_id)
+        partition_name = topic_name + ".1"
+        # self.partition_broker[partition_name] = broker_id
+        self.partition_dbms.add_partition(partition_name,broker_id)
+        
+        return MyBroker.create_topic(url, partition_name)
 
 
     def add_partition(self,topic_name):
         ## Need to send request to read manager too.
         # Choose a Broker (Round Robin / Random)
         # Create the partition by calling create_topic of MyBroker instance
-        curr_id = random.choice(self.broker_port)
-        broker_port = self.broker_port(curr_id)
+        # curr_id = random.choice(self.broker_port)
+        # broker_port = self.broker_port(curr_id)
+        broker_port,broker_id = self.broker_dbms.get_random_broker()
         url = "http://127.0.0.1:" + str(broker_port)
 
-        self.topic_numPartitions[topic_name] += 1
-        partition_id = topic_name + "." + self.topic_numPartitions[topic_name]
-        self.partition_broker[partition_id] = curr_id
+        # self.topic_numPartitions[topic_name] += 1
+        num_partitions=self.topic_dbms.add_partition(topic_name)
+        # partition_name = topic_name + "." + str(self.topic_numPartitions[topic_name])
+        partition_name = topic_name + "." + str(num_partitions)
+        # self.partition_broker[partition_name] = broker_id
+        self.partition_dbms.add_partition(partition_name,broker_id)
         #Send request to broker server for creating new partition
 
-        MyBroker.create_topic(url, partition_id)
-        return partition_id
+        MyBroker.create_topic(url, partition_name)
+        return partition_name
 
 
     def list_topics(self):
@@ -127,7 +142,8 @@ class writeManager:
         Returns a list of all the topics in the system.
         """
         # Return from Metadata of Write Manager
-        return self.topics
+        # return self.topics
+        return self.topic_dbms.list_topics()
 
     def register_producer(self,topic_name):
         # Check if Topic Exists. If not Create Topic
@@ -141,10 +157,11 @@ class writeManager:
         if topic_name not in self.topics:
             self.add_topic(topic_name)
 
-        self.num_producers += 1
-        self.producer_topic[self.num_producers] = topic_name
-        return self.num_producers
-
+        # self.num_producers += 1
+        # self.producer_topic[self.num_producers] = topic_name
+        producer_id=self.producer_dbms.add_producer(topic_name)
+        # return self.num_producers
+        return producer_id
 
 
     def produce_message(self,producer_id,topic_name,message):
@@ -160,16 +177,18 @@ class writeManager:
             raise Exception("ProducerId is not subscribed to the topic")
 
         # curr_partition = random.randint(1,self.topic_numPartitions[topic_name])
-        curr_partition = self.topics_offset[topic_name]%self.topic_numPartitions[topic_name] + 1
-        self.topics_offset[topic_name] = (self.topics_offset[topic_name] + 1)%self.topic_numPartitions[topic_name]
-        partition_id = topic_name + "." + str(curr_partition)
+        # curr_partition = self.topics_offset[topic_name]%self.topic_numPartitions[topic_name] + 1
+        # self.topics_offset[topic_name] = (self.topics_offset[topic_name] + 1)%self.topic_numPartitions[topic_name]
+        curr_partition=self.topic_dbms.get_current_partition(topic_name) ## round robin, do both the above things here
+        partition_name = topic_name + "." + str(curr_partition)
 
-        curr_id = self.partition_broker[partition_id]
-        broker_port = self.broker_port[curr_id]
+        # curr_id = self.partition_broker[partition_name]
+        # broker_port = self.broker_port[curr_id]
+        broker_port=self.partition_dbms.get_broker_port_from_partition(partition_name)
         url = "http://127.0.0.1:" + str(broker_port)
         #send request to broker for enque message
  
-        return MyBroker.publish_message(url, partition_id, message)
+        return MyBroker.publish_message(url, partition_name, message)
 
 
     def health_check(self):

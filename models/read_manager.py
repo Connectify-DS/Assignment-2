@@ -49,11 +49,11 @@ class readManager:
         self.topics.append(topic_name)
         self.topic_numPartitions[topic_name] = 1
 
-    def add_partition(self, topic_name, partition_id, broker_id):
+    def add_partition(self, topic_name, partition_name, broker_id):
 
         # Handle Metadata of Read Manager -> Do not request broker
         # This function may not be useful. 
-        self.partition_broker[partition_id] = broker_id
+        self.partition_broker[partition_name] = broker_id
         self.topic_numPartitions[topic_name] += 1
 
 
@@ -85,8 +85,8 @@ class readManager:
         self.consumer_topic[consumer_id]
         self.offsets[consumer_id] = {}
         for i in range(1,self.topic_numPartitions[topic_name]+1):
-            partition_id = topic_name + "." + str(i)
-            self.offsets[consumer_id][partition_id] = 0
+            partition_name = topic_name + "." + str(i)
+            self.offsets[consumer_id][partition_name] = 0
 
 
     def consume_message(self,consumer_id,topic_name):
@@ -105,13 +105,13 @@ class readManager:
 
         #assign partition
         partition_no = random.randbytes(1,self.topic_numPartitions[topic_name])
-        partition_id = topic_name + "." + partition_no
-        curr_id = self.partition_broker[partition_id]
+        partition_name = topic_name + "." + partition_no
+        curr_id = self.partition_broker[partition_name]
         broker_port = self.broker_port[curr_id]
         url = "https://127.0.0.1:" + str(broker_port)
-        offset = self.offsets[consumer_id][partition_id]
+        offset = self.offsets[consumer_id][partition_name]
 
-        return MyBroker.consume_message(url, partition_id, offset)
+        return MyBroker.consume_message(url, partition_name, offset)
 
 
     def health_check(self):
