@@ -13,6 +13,8 @@ class MyBroker:
             r = requests.post(topics_url, json = data)
             r.raise_for_status()
         except requests.exceptions.HTTPError as errh:
+            if errh.response.status_code==400:
+                raise Exception(f"{topics_url} Failed: "+ str(errh.response.json()["message"]))
             raise errh
         except requests.exceptions.ConnectionError as errc:
             raise errc
@@ -36,8 +38,10 @@ class MyBroker:
         try:
             r = requests.get(list_url)
             r.raise_for_status()
-        except requests.exceptions.HTTPError as errhttp :
-            raise errhttp
+        except requests.exceptions.HTTPError as errh :
+            if errh.response.status_code==400:
+                raise Exception(f"{list_url} Failed: "+ str(errh.response.json()["message"]))
+            raise errh
         except requests.exceptions.ConnectionError as errcon :
             raise errcon
         
@@ -62,6 +66,8 @@ class MyBroker:
             r = requests.post(publish_url, json = data)
             r.raise_for_status()
         except requests.exceptions.HTTPError as errh:
+            if errh.response.status_code==400:
+                raise Exception(f"{publish_url} Failed: "+ str(errh.response.json()["message"]))
             raise errh
         except requests.exceptions.ConnectionError as errc:
             raise errc
@@ -88,6 +94,8 @@ class MyBroker:
             r = requests.get(consume_url, json = data)
             r.raise_for_status()
         except requests.exceptions.HTTPError as errh:
+            if errh.response.status_code==400:
+                raise Exception(f"{consume_url} Failed: "+ str(errh.response.json()["message"]))
             raise errh
         except requests.exceptions.ConnectionError as errc:
             raise errc

@@ -39,6 +39,21 @@ class BrokerDBMS:
             self.lock.release()
             raise Exception(f"DBMS ERROR: Could not add broker: {port}: {str(e)}")
     
+    def delete_broker(self, port):
+        self.lock.acquire()
+        try:
+            self.cur.execute("""
+                DELETE FROM BROKERS
+                WHERE PORT = %s
+            """,(port,))
+            
+            self.conn.commit()
+            self.lock.release()
+        except Exception as e:
+            self.conn.rollback()
+            self.lock.release()
+            raise Exception(f"DBMS ERROR: Could not delete broker: {port}: {str(e)}")
+    
     def get_num_brokers(self):
         self.lock.acquire()
         try:

@@ -107,7 +107,29 @@ def test_producer():
     id=producer_dbms.add_producer("test2")
     print(f"Added Producer ID: {id}")
 
+    try:
+        print("Adding Producer whose topic does not exist")
+        id=producer_dbms.add_producer("test3")
+        print(f"Added Producer ID: {id}")
+    except Exception as e:
+        print(e)
+
     print("Number of Producers: ",producer_dbms.get_num_producers())
+
+    print("Checking if Producer ID 1 exists")
+    print(producer_dbms.check_producer_id(1))
+
+    print("Checking if Producer ID 5 exists")
+    print(producer_dbms.check_producer_id(5))
+
+    print("Checking if link between Producer ID 1 and Topic Name test1 exists")
+    print(producer_dbms.check_producer_topic_link(1, "test1"))
+    
+    print("Checking if link between Producer ID 1 and Topic Name test3 exists")
+    print(producer_dbms.check_producer_topic_link(1, "test3"))
+
+    print("Checking if link between Producer ID 5 and Topic Name test1 exists")
+    print(producer_dbms.check_producer_topic_link(5, "test1"))
 
 
 

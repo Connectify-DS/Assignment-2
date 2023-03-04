@@ -38,11 +38,11 @@ class ProducerDBMS:
             self.conn.commit()
             self.lock.release()
             return producer_id
-        except:
+        except Exception as e:
             # print("Error while registering producer")
             self.conn.rollback()
             self.lock.release()
-            raise Exception(f"DBMS Error: Could not add producer with topic name: {topic_name}")
+            raise Exception(f"DBMS Error: Could not add producer with topic name: {topic_name}: {str(e)}")
 
     def get_num_producers(self):
         self.lock.acquire()
@@ -62,4 +62,49 @@ class ProducerDBMS:
             # print(e)
             self.conn.rollback()
             self.lock.release()
-            raise Exception(f"DBMS Error: Could not get no. of producers")
+            raise Exception(f"DBMS Error: Could not get no. of producers: {str(e)}")
+    
+    def check_producer_id(self, producer_id):
+        self.lock.acquire()
+        try:
+            self.cur.execute("""
+                SELECT EXISTS (
+                    SELECT 1 FROM PRODUCERS 
+                    WHERE ID = %s)
+            """, (producer_id,))
+            try:
+                row=self.cur.fetchone()
+            except Exception as e:
+                raise e
+            self.lock.release()
+            if row is None:
+                raise Exception("Could not execute query")
+            return row[0]
+        except Exception as e:
+            # print(e)
+            self.conn.rollback()
+            self.lock.release()
+            raise Exception(f"DBMS Error: Could not check producer_id {producer_id}: {str(e)}")
+    
+    def check_producer_topic_link(self, producer_id, topic_name):
+        self.lock.acquire()
+        try:
+            self.cur.execute("""
+                SELECT EXISTS (
+                    SELECT 1 FROM PRODUCERS 
+                    WHERE ID = %s AND
+                    TOPIC = %s)
+            """, (producer_id, topic_name,))
+            try:
+                row=self.cur.fetchone()
+            except Exception as e:
+                raise e
+            self.lock.release()
+            if row is None:
+                raise Exception("Could not execute query")
+            return row[0]
+        except Exception as e:
+            # print(e)
+            self.conn.rollback()
+            self.lock.release()
+            raise Exception(f"DBMS Error: Could not check link between producer_id {producer_id} - topic_name {topic_name}: {str(e)}")
