@@ -15,21 +15,21 @@ class TopicDBMS_WM:
         try:
             self.cur.execute("""
                 CREATE TABLE IF NOT EXISTS TOPICS_WM(
-                ID SERIAL PRIMARY KEY NOT NULL,
-                NAME TEXT NOT NULL UNIQUE,
-                OFFSET INT NOT NULL,
+                ID SERIAL UNIQUE NOT NULL,
+                NAME TEXT PRIMARY KEY NOT NULL,
+                OFSET INT NOT NULL,
                 NUM_PARTITIONS INT NOT NULL);
             """)
 
             self.conn.commit()
-        except:
+        except Exception as e:
             self.conn.rollback()
 
     def add_topic(self,topic_name)->int:
         self.lock.acquire()
         try:
             self.cur.execute("""
-                INSERT INTO TOPICS_WM (NAME,OFFSET,NUM_PARTITIONS)
+                INSERT INTO TOPICS_WM (NAME,OFSET,NUM_PARTITIONS)
                 VALUES (%s,0,1)
                 RETURNING ID
             """,(topic_name,))
@@ -91,9 +91,9 @@ class TopicDBMS_WM:
         try:
             self.cur.execute("""
                 UPDATE TOPICS_WM
-                SET OFFSET = MOD( ( OFFSET + 1 ), NUM_PARTITIONS )
+                SET OFSET = MOD( ( OFSET + 1 ), NUM_PARTITIONS )
                 WHERE NAME=%s
-                RETURNING OFFSET, NUM_PARTITIONS
+                RETURNING OFSET, NUM_PARTITIONS
             """,(topic_name,))
 
             offset,num_partition = self.cur.fetchone()
@@ -101,7 +101,7 @@ class TopicDBMS_WM:
 
             self.conn.commit()
             self.lock.release()
-            return offset
+            return offset+1
         except Exception as e:
             self.conn.rollback()
             self.lock.release()

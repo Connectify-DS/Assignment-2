@@ -24,10 +24,10 @@ class writeManager:
         self.brokerId = []
         self.producer_topic = {}
 
-        self.topic_dbms=TopicDBMS_WM()
-        self.broker_dbms=BrokerDBMS()
-        self.partition_dbms=PartitionDMBS()
-        self.producer_dbms=ProducerDBMS()
+        self.topic_dbms=TopicDBMS_WM(config)
+        self.broker_dbms=BrokerDBMS(config)
+        self.partition_dbms=PartitionDMBS(config)
+        self.producer_dbms=ProducerDBMS(config)
 
         self.num_producers = self.producer_dbms.get_num_producers()
         self.num_brokers = self.broker_dbms.get_num_brokers()
@@ -36,7 +36,7 @@ class writeManager:
 
         ##HARD CODING BROKERS
         for i in range(init_brokers):
-            id=self.broker_dbms.add_new_broker(self.curr_port)
+            id=self.broker_dbms.add_new_broker(str(self.curr_port))
             # self.brokerId.append(i)
             # self.broker_port[i] = self.curr_port
             self.curr_port += 100
@@ -73,7 +73,7 @@ class writeManager:
         port = self.curr_port
         self.curr_port += 100
         # self.broker_port[broker_id] = port
-        broker_id=self.broker_dbms.add_new_broker(port)
+        broker_id=self.broker_dbms.add_new_broker(str(port))
 
         #generate yaml file
         config = {'IS_PERSISTENT': self.ispersistent,
@@ -154,7 +154,7 @@ class writeManager:
         #       Add new producer to the healthcheck list with the ID
         #       Save the current time (time.datetime) as the time of creation
         #       You will also have to maintain the last use time (currently empty)
-        if topic_name not in self.topics:
+        if topic_name not in self.list_topics():
             self.add_topic(topic_name)
 
         # self.num_producers += 1

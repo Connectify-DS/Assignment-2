@@ -13,7 +13,7 @@ class BrokerDBMS:
             self.cur.execute("""
                 CREATE TABLE IF NOT EXISTS BROKERS(
                 ID SERIAL PRIMARY KEY NOT NULL,
-                PORT TEXT NOT NULL);
+                PORT TEXT UNIQUE NOT NULL);
             """)
 
             self.conn.commit()
@@ -34,10 +34,10 @@ class BrokerDBMS:
             self.conn.commit()
             self.lock.release()
             return broker_id
-        except:
-            # print("Error while registering broker")
+        except Exception as e:
             self.conn.rollback()
             self.lock.release()
+            raise Exception(f"DBMS ERROR: Could not add broker: {port}: {str(e)}")
     
     def get_num_brokers(self):
         self.lock.acquire()
@@ -54,9 +54,9 @@ class BrokerDBMS:
                 raise Exception("No brokers present in database")
             return row[0]
         except Exception as e:
-            # print(e)
             self.conn.rollback()
             self.lock.release()
+            raise Exception(f"DBMS ERROR: Could not get number of brokers: {str(e)}")
 
     def get_random_broker(self):
         self.lock.acquire()
@@ -77,7 +77,7 @@ class BrokerDBMS:
             self.lock.release()
             return id, port
         except Exception as e:
-            # print(e)
             self.conn.rollback()
             self.lock.release()
+            raise Exception(f"DBMS ERROR: Could not get random brokers: {str(e)}")
 

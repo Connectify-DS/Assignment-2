@@ -1,4 +1,3 @@
-from models import Producer
 import psycopg2
 import sys
 sys.path.append("..")
@@ -17,7 +16,8 @@ class ProducerDBMS:
             self.cur.execute("""
                 CREATE TABLE IF NOT EXISTS PRODUCERS(
                 ID SERIAL PRIMARY KEY NOT NULL,
-                TOPIC TEXT NOT NULL);
+                TOPIC TEXT NOT NULL,
+                FOREIGN KEY (TOPIC) REFERENCES TOPICS_WM(NAME));
             """)
 
             self.conn.commit()
@@ -42,32 +42,7 @@ class ProducerDBMS:
             # print("Error while registering producer")
             self.conn.rollback()
             self.lock.release()
-
-    def get_producer(self,producer_id):
-        self.lock.acquire()
-        try:
-            self.cur.execute("""
-                SELECT * FROM PRODUCERS
-                WHERE ID = %s
-            """,(producer_id,))
-
-            try:
-                row=self.cur.fetchone()
-                if row is None:
-                    raise Exception("Invalid Producer Id")
-            except Exception as e:
-                raise e
-            
-            p= Producer(
-                    producer_id=row[0],
-                    producer_topic=row[1]
-                )
-            self.lock.release()
-            return p
-        except Exception as e:
-            # print(e)
-            self.conn.rollback()
-            self.lock.release()
+            raise Exception(f"DBMS Error: Could not add producer with topic name: {topic_name}")
 
     def get_num_producers(self):
         self.lock.acquire()
@@ -87,3 +62,4 @@ class ProducerDBMS:
             # print(e)
             self.conn.rollback()
             self.lock.release()
+            raise Exception(f"DBMS Error: Could not get no. of producers")
