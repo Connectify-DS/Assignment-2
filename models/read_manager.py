@@ -4,9 +4,6 @@ import random
 from myqueue import MyBroker
 from in_memory_structures import ConsumerTable, ProducerTable, TopicTable, MessageTable
 from database_structures import ConsumerDBMS, ProducerDBMS, TopicDBMS, MessageDBMS
-# TODO:
-# Move list_topics register producer and register consumer
-# Write a MyReadManager class that sends requests to flask server
 
 # Note:
 # Use MyBroker class from myqueue folder to create, publish, consume, list topics as that class

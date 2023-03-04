@@ -7,9 +7,6 @@ from myqueue import MyBroker
 import random
 import yaml
 import os
-# TODO:
-# Move list_topics register producer and register consumer 
-# Write a MyWriteManager class that sends requests to flask server
 
 # Note:
 # Use MyBroker class from myqueue folder to create, publish, consume, list topics as that class

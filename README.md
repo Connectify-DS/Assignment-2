@@ -22,6 +22,20 @@ These can be run directly using `python unit_test1.py` or `python unit_test2.py`
 • Run `python Test_Main.py` to test the main code
 
 TODO:
+- [ ] Adding and Removing Brokers
+- [ ] Sync between WM, all RMs
+- [ ] Delete unnecessary files (app.py, dbms files, inmemory files, etc) later
+- [ ] Adding partition issue in RM (maintaining offsets)
+
 Ishan:
 - [ ] handle requests from wm to rm
 - [ ] make rm app server
+
+Mayank and Shrinivas
+- [ ] Make RM in db
+
+Yashica
+- [ ] Health Check
+
+Shashwat
+- [ ] WAL
