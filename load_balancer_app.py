@@ -1,12 +1,16 @@
 """
 Flask app to create a message queue system
 """
-from flask import Flask
+from flask import Flask, redirect
 from flask import request
 from flask import jsonify
 import requests
 import argparse
+from urllib3.exceptions import InsecureRequestWarning
 import yaml
+from urllib3 import disable_warnings
+
+disable_warnings(InsecureRequestWarning)
 
 # parser = argparse.ArgumentParser()
 # parser.add_argument('-c', '--config', help='config file path', type=str)
@@ -27,33 +31,34 @@ def handle_request(url,data,forward_to,method="POST"):
     Code to handle post requests to Write Manager or Read Manager URL. 
     Made a function to reduce redundancy
     """
-    print(3)
     try:   
         if method=="GET":
-            print(2)
-            print(data)
             if data==None:
-                print(1)
-                r = requests.get(url, verify=False)
+                r = requests.get(url)
             else:
-                r = requests.get(url, json = data, verify=False)
-
+                r = requests.get(url, json = data)
         elif method=="POST":
             if data==None:
-                r = requests.post(url, verify=False)
+                r = requests.post(url)
             else:
-                r = requests.post(url, json = data, verify=False)
+                r = requests.post(url, json = data)
         r.raise_for_status()
     except requests.exceptions.HTTPError as errh:
+        if errh.response.status_code==400:
+            resp={
+                "status": "failure",
+                "message": f"{forward_to} Failed: "+ str(errh.response.json()["message"])
+            }
+            return jsonify(resp),400
         resp={
             "status": "failure",
-            "message": str(errh),
+            "message": "HTTP Error: "+str(errh),
         }
         return jsonify(resp),400
     except requests.exceptions.ConnectionError as errc:
         resp={
             "status": "failure",
-            "message": str(errc),
+            "message": "HTTP Connection Error: "+str(errc),
         }
         return jsonify(resp),400
 
@@ -66,11 +71,7 @@ def handle_request(url,data,forward_to,method="POST"):
     
     response = r.json()
     if response["status"] == "success":
-        resp={
-            "status": "success",
-            "message": response["message"]
-        }
-        return jsonify(resp), 200
+        return jsonify(response), 200
     else:
         resp={
             "status": "failure",
@@ -108,31 +109,7 @@ def listTopics():
     List all the created topics
     """
     wm_request_url = config['WRITE_MANAGER_URL'] +  "/topics"
-    print(wm_request_url)
-    # print(request.json)
-    r = handle_request(wm_request_url,None,"Write Manager","GET")
-    return r
-    # list_url = self.base_url + "/topics"
-    # r = None
-    
-    # try:
-    #     r = requests.get(list_url)
-    #     r.raise_for_status()
-    # except requests.exceptions.HTTPError as errhttp :
-    #     print(f"HTTP error:{errhttp}")
-    # except requests.exceptions.ConnectionError as errcon :
-    #     print(f"HTTP error:{errcon}")
-    
-    # if r is None:
-    #     print(f"Null Response")
-    #     return
-
-    # response = r.json()
-
-    # if response["status"] == "success":
-    #     return response['topics']
-    # else:
-    #     print(f"Failed to list topics")
+    return handle_request(wm_request_url,None,"Write Manager","GET")
 
 @app.route('/producer/register',methods=['POST'])
 def registerProducer():
