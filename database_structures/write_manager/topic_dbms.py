@@ -107,4 +107,21 @@ class TopicDBMS_WM:
             self.lock.release()
             raise Exception(f"DBMS ERROR: Could not get current partition: {str(e)}")
 
-    
+    def get_num_partitions(self,topic_name):
+        self.lock.acquire()
+        try:
+            self.cur.execute("""
+                SELECT NUM_PARTITIONS FROM TOPICS_WM
+                WHERE NAME=%s
+            """,(topic_name,))
+
+            num_partition = self.cur.fetchone()[0]
+
+            self.conn.commit()
+            self.lock.release()
+            return num_partition
+        except Exception as e:
+            self.conn.rollback()
+            self.lock.release()
+            raise Exception(f"DBMS ERROR: Could not get current partition: {str(e)}")
+

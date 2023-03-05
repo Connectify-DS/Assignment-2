@@ -1,6 +1,6 @@
-from models import Consumer
+# from models import Consumer
 import psycopg2
-import sys
+import sys, json
 sys.path.append("..")
 from config import *
 import threading
@@ -18,77 +18,144 @@ class ConsumerDBMS:
             CREATE TABLE IF NOT EXISTS CONSUMERS(
             ID SERIAL PRIMARY KEY NOT NULL,
             TOPIC TEXT NOT NULL,
-            OFSET INT NOT NULL);
+            OFSET JSONB NOT NULL);
         """)
 
             self.conn.commit()
         except:
             self.conn.rollback()
 
-    def register_to_topic(self,topic_name):
+    def add_consumer(self,topic_name,num_partitions):
         self.lock.acquire()
         try:
+            data={}
+            for i in range(num_partitions):
+                pname = topic_name+"."+str(i+1)
+                data[pname] = 0
+            data = json.dumps(data)
             self.cur.execute("""
-            INSERT INTO CONSUMERS (TOPIC,OFSET) 
-            VALUES (%s,0)
-            RETURNING ID
-        """,(topic_name,))
+                INSERT INTO CONSUMERS (TOPIC,OFSET) 
+                VALUES (%s,%s)
+                RETURNING ID
+            """, (topic_name, data,))
 
-            consumer_id=self.cur.fetchone()
+            consumer_id=self.cur.fetchone()[0]
             # print(consumer_id)
             
             self.conn.commit()
             self.lock.release()
             return consumer_id
-        except:
+        except Exception as e:
             self.conn.rollback()
             self.lock.release()
-
-    def get_consumer(self,consumer_id):
-        self.lock.acquire()
-        try:
-            self.cur.execute("""
-                SELECT * FROM CONSUMERS
-                WHERE ID = %s
-            """,(consumer_id,))
-
-            try:
-                row=self.cur.fetchone()
-                if row is None:
-                    raise Exception("Invalid Consumer id")
-            except Exception as e:
-                raise e
-
-            c= Consumer(
-                    consumer_id=row[0],
-                    topic_name=row[1],
-                    cur_topic_queue_offset=row[2]
-                )
-            self.lock.release()
-            return c
-        except:
-            self.conn.rollback()
-            self.lock.release()
+            raise Exception(f"DBMS Error: Could not add consumer with topic name: {topic_name}: {str(e)}")
     
-    def increase_offset(self, consumer_id):
+    def get_offset(self, consumer_id, partition_name):
         self.lock.acquire()
         try:
-            self.cur.execute("""
-                UPDATE CONSUMERS
-                SET OFSET = OFSET + 1
-                WHERE ID = %s
-            """,(consumer_id,))
-
-            self.conn.commit()
-
             self.cur.execute("""
                 SELECT OFSET FROM CONSUMERS
-                WHERE ID = %s
-            """,(consumer_id,))
-
+                WHERE ID=%s
+            """, (consumer_id,))
             row=self.cur.fetchone()[0]
+            x = row[partition_name]+1
+            data = {partition_name: x}
+            data = json.dumps(data)
+            self.cur.execute("""
+                UPDATE CONSUMERS
+                SET OFSET = OFSET || %s
+                WHERE ID=%s
+            """,(data, consumer_id,))
+
+            self.conn.commit()
             self.lock.release()
-            return row-1
-        except:
+            return x-1
+        except Exception as e:
             self.conn.rollback()
             self.lock.release()
+            raise Exception(f"DBMS Error: Could not get offset of consumer with partition name: {partition_name}: {str(e)}")
+    
+    def add_partition(self, topic_name, partition_name):
+        self.lock.acquire()
+        try:
+            data = {partition_name: 0}
+            data = json.dumps(data)
+            self.cur.execute("""
+                UPDATE CONSUMERS
+                SET OFSET = OFSET || %s
+                WHERE TOPIC=%s
+            """,(data, topic_name,))
+
+            self.conn.commit()
+            self.lock.release()
+        except Exception as e:
+            self.conn.rollback()
+            self.lock.release()
+            raise Exception(f"DBMS Error: Could not add partition name: {partition_name} for topic name {topic_name}: {str(e)}")
+
+    def get_num_consumers(self):
+        self.lock.acquire()
+        try:
+            self.cur.execute("""
+                SELECT COUNT(*) FROM CONSUMERS
+            """)
+            try:
+                row=self.cur.fetchone()
+            except Exception as e:
+                raise e
+            
+            if row is None:
+                raise Exception("No consumers present in database")
+            self.lock.release()
+            return row[0]
+        except Exception as e:
+            # print(e)
+            self.conn.rollback()
+            self.lock.release()
+            raise Exception(f"DBMS Error: Could not get no. of consumers: {str(e)}")
+    
+    def check_consumer_id(self, consumer_id):
+        self.lock.acquire()
+        try:
+            self.cur.execute("""
+                SELECT EXISTS (
+                    SELECT 1 FROM CONSUMERS 
+                    WHERE ID = %s)
+            """, (consumer_id,))
+            try:
+                row=self.cur.fetchone()
+            except Exception as e:
+                raise e
+            
+            if row is None:
+                raise Exception("Could not execute query")
+            self.lock.release()
+            return row[0]
+        except Exception as e:
+            # print(e)
+            self.conn.rollback()
+            self.lock.release()
+            raise Exception(f"DBMS Error: Could not check consumer_id {consumer_id}: {str(e)}")
+    
+    def check_consumer_topic_link(self, consumer_id, topic_name):
+        self.lock.acquire()
+        try:
+            self.cur.execute("""
+                SELECT EXISTS (
+                    SELECT 1 FROM CONSUMERS 
+                    WHERE ID = %s AND
+                    TOPIC = %s)
+            """, (consumer_id, topic_name,))
+            try:
+                row=self.cur.fetchone()
+            except Exception as e:
+                raise e
+            if row is None:
+                raise Exception("Could not execute query")
+            self.lock.release()
+            return row[0]
+        except Exception as e:
+            # print(e)
+            self.conn.rollback()
+            self.lock.release()
+            raise Exception(f"DBMS Error: Could not check link between consumer_id {consumer_id} - topic_name {topic_name}: {str(e)}")

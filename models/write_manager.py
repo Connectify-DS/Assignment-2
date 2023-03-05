@@ -7,6 +7,8 @@ from myqueue import MyBroker
 import random
 import yaml
 import os
+from sqlalchemy import create_engine
+from sqlalchemy_utils import database_exists, create_database
 
 # Note:
 # Use MyBroker class from myqueue folder to create, publish, consume, list topics as that class
@@ -17,6 +19,14 @@ class writeManager:
         self.init_brokers=config['INIT_BROKERS']
 
         if self.ispersistent:
+            engine=create_engine(f"postgresql://{config['USER']}:{config['PASSWORD']}@{config['HOST']}:{config['PORT']}/{config['DATABASE']}")
+            if not database_exists(engine.url):
+                create_database(engine.url)
+            if(database_exists(engine.url)):
+                print(f"Database {config['DATABASE']} Created/Exists")
+            else:
+                raise Exception("Database Could not be created")
+            
             self.topic_dbms=TopicDBMS_WM(config)
             self.broker_dbms=BrokerDBMS(config)
             self.partition_dbms=PartitionDMBS(config)

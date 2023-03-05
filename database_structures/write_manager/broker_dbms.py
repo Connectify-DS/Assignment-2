@@ -64,9 +64,9 @@ class BrokerDBMS:
                 row=self.cur.fetchone()
             except Exception as e:
                 raise e
-            self.lock.release()
             if row is None:
                 raise Exception("No brokers present in database")
+            self.lock.release()
             return row[0]
         except Exception as e:
             self.conn.rollback()
