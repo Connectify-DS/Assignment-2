@@ -36,12 +36,13 @@ class readManager:
         else:
             self.topics = []
             self.topics_offset = {}
+            self.topic_consumerid = {}
             self.partition_broker = {}      #Partition -> Broker ID
             self.topic_numPartitions = {}  #Topic -> num_partition
             self.broker_port = {} ## List of id to broker_port
             self.brokerId = []
             self.consumer_topic = {}
-            self.offsets = {}
+            self.offsets = {}  # 2d map consumer_id, partition
 
             self.num_consumers = 0
             self.num_brokers = 0
@@ -121,6 +122,7 @@ class readManager:
             self.partition_dbms.add_partition(partition_name,broker_id)
         else:
             self.topics.append(topic_name)
+            self.topic_consumerid[topic_name] = []
             self.topics_offset[topic_name] = 0
             self.topic_numPartitions[topic_name] = 1
 
@@ -139,6 +141,9 @@ class readManager:
         else:
             self.partition_broker[partition_name] = broker_id
             self.topic_numPartitions[topic_name] += 1
+
+            for i in self.topic_consumerid:
+                self.offsets[i][partition_name] = 0
 
     def list_topics(self):
         """
@@ -170,6 +175,7 @@ class readManager:
             consumer_id = self.num_consumers
             self.num_consumers += 1
             self.consumer_topic[consumer_id]
+            self.topic_consumerid[topic_name].append(consumer_id)
             self.offsets[consumer_id] = {}
             for i in range(1,self.topic_numPartitions[topic_name]+1):
                 partition_name = topic_name + "." + str(i)
@@ -205,7 +211,7 @@ class readManager:
                 raise e
 
             #assign partition
-            curr_partition = random.randint(1,self.topic_numPartitions[topic_name])
+            # curr_partition = random.randint(1,self.topic_numPartitions[topic_name])
             curr_partition = self.topics_offset[topic_name]%self.topic_numPartitions[topic_name] + 1
             self.topics_offset[topic_name] = (self.topics_offset[topic_name] + 1)%self.topic_numPartitions[topic_name]
 
@@ -214,6 +220,7 @@ class readManager:
             broker_port = self.broker_port[curr_id]
             
             offset = self.offsets[consumer_id][partition_name]
+            self.offsets[consumer_id][partition_name] += 1
 
         url = "http://127.0.0.1:" + str(broker_port)
 
