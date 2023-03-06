@@ -49,15 +49,18 @@ class TopicDBMS_WM:
         self.lock.acquire()
         try:
             self.cur.execute("""
-                SELECT MAX(UNNEST(PARTITIONS))
+                SELECT PARTITIONS, NUM_PARTITIONS
                 FROM TOPICS_WM
-            """)
-            pid = self.cur.fetchone()[0]
-            if pid==None:
+                WHERE NAME=%s
+            """, (topic_name,))
+            partitions, num_partitions = self.cur.fetchone()
+            if num_partitions==0:
                 pid = 0
+            else:
+                pid = partitions[num_partitions-1]
             self.cur.execute("""
                 UPDATE TOPICS_WM
-                SET PARTITIONS = PARTITIONS || %d
+                SET PARTITIONS = PARTITIONS || %s,
                 NUM_PARTITIONS = NUM_PARTITIONS + 1 
                 WHERE NAME=%s
             """,(pid+1, topic_name,))
@@ -97,15 +100,15 @@ class TopicDBMS_WM:
                 UPDATE TOPICS_WM
                 SET OFSET = MOD( ( OFSET + 1 ), NUM_PARTITIONS )
                 WHERE NAME=%s
-                RETURNING OFSET, NUM_PARTITIONS
+                RETURNING OFSET, PARTITIONS, NUM_PARTITIONS
             """,(topic_name,))
 
-            offset,num_partition = self.cur.fetchone()
+            offset, partitions, num_partition = self.cur.fetchone()
             offset=(offset-1+num_partition)%num_partition
 
             self.conn.commit()
             self.lock.release()
-            return offset+1
+            return partitions[(offset+1)%num_partition]
         except Exception as e:
             self.conn.rollback()
             self.lock.release()

@@ -4,7 +4,7 @@ import yaml
 from models import readManager
 
 config=None
-with open('../configs/rm.yaml') as f:
+with open('../configs/rm1.yaml') as f:
     config = yaml.safe_load(f)
 
 rm = readManager(config=config)
@@ -15,10 +15,10 @@ if __name__=="__main__":
 
     try:
         print("Adding Topic test1")
-        rm.add_topic("test1",1)
+        rm.add_topic("test1")
 
         print("Adding Topic test2")
-        rm.add_topic("test2",2)
+        rm.add_topic("test2")
     except Exception as e:
         print(e)
 
