@@ -10,6 +10,8 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy_utils import database_exists, create_database
 
+PARTITION_THRESHOLD = 100
+
 # Note:
 # Use MyBroker class from myqueue folder to create, publish, consume, list topics as that class
 # requests the broker server. Initialise it with the broker url. 
@@ -42,6 +44,7 @@ class writeManager:
             self.topics_offset = {}
             self.partition_broker = {}      #Partition -> Broker ID
             self.topic_numPartitions = {}  #Topic -> num_partition
+            self.topic_numMsgs = {}
             self.broker_port = {} ## List of id to broker_port
             self.brokerId = []
             self.producer_topic = {}
@@ -204,7 +207,8 @@ class writeManager:
             if not self.producer_dbms.check_producer_topic_link(producer_id,topic_name):
                 raise Exception("ProducerId is not subscribed to the topic")
             
-            curr_partition=self.topic_dbms.get_current_partition(topic_name) ## round robin
+            curr_partition, num_partition, num_msgs = self.topic_dbms.get_current_partition(topic_name, 1) ## round robin
+            num_msgs += 1
             partition_name = topic_name + "." + str(curr_partition)
 
             broker_port=self.partition_dbms.get_broker_port_from_partition(partition_name)
@@ -217,14 +221,23 @@ class writeManager:
             curr_partition = random.randint(1,self.topic_numPartitions[topic_name])
             curr_partition = self.topics_offset[topic_name]%self.topic_numPartitions[topic_name] + 1
             self.topics_offset[topic_name] = (self.topics_offset[topic_name] + 1)%self.topic_numPartitions[topic_name]
+            self.topic_numMsgs[topic_name] += 1
 
             partition_name = topic_name + "." + str(curr_partition)
             curr_id = self.partition_broker[partition_name]
             broker_port = self.broker_port[curr_id]
+            num_partition = self.topic_numPartitions[topic_name]
+            num_msgs = self.topic_numMsgs[topic_name]
 
         url = "http://127.0.0.1:" + str(broker_port)
  
-        return MyBroker.publish_message(url, partition_name, message)
+        resp = MyBroker.publish_message(url, partition_name, message)
+
+        if (num_msgs/num_partition) > PARTITION_THRESHOLD:
+            print(f"Threshold exceeded. Adding new partition for topic {topic_name}")
+            self.add_partition(topic_name)
+        
+        return resp
 
 
     def health_check(self):
