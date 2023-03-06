@@ -4,6 +4,7 @@ Flask app to create a message queue system
 from flask import Flask
 from flask import request
 from flask import jsonify
+import requests
 from models import Broker
 import yaml
 import argparse
@@ -138,4 +139,24 @@ def retrieve():
         return jsonify(resp), 400
 
 if __name__ == "__main__":
+    wm_url = "http://127.0.0.1:" + config["WRITE_MANAGER_PORT"] +  "/broker"
+    data = {"port" : config["PORT"]}
+    r = None
+
+    try:
+        r = requests.post(wm_url, json = data)
+        r.raise_for_status()
+    except requests.exceptions.HTTPError as errh:
+        print ("Http Error:",errh)
+    except requests.exceptions.ConnectionError as errc:
+        print ("Error Connecting:",errc)
+    
+    if r is None:
+        print(f"Null Response")
+    
+    response = r.json()
+    
+    if response["status"] == "success":
+        print("Broker Listed")
+    
     app.run(debug=True,port=config['SERVER_PORT'])

@@ -76,7 +76,7 @@ class writeManager:
 
 
         
-    def add_broker(self,port):
+    def add_broker(self, port):
         ## Note: You will have to request read manager to add this broker too.
         if self.ispersistent:
             port = self.curr_port
@@ -88,20 +88,6 @@ class writeManager:
             port = self.curr_port
             self.curr_port += 100
             self.broker_port[broker_id] = port
-
-        #generate yaml file
-        config = {'IS_PERSISTENT': self.ispersistent,
-                    'SERVER_PORT': port,
-                    'USER': 'postgres',
-                    'PASSWORD': 'mayank',
-                    'DATABASE': 'mqsdb',
-                    'HOST': '127.0.0.1',
-                    'PORT': '5432'}
-        with open(f'../configs/broker{broker_id}.yaml', 'w') as f:
-            yaml.dump(config, f)
-        
-        #start a new server
-        os.system('python3 ../broker_app.py -c ../configs/broker{broker_id}.yaml')
         return broker_id
 
     def add_topic(self, topic_name):
