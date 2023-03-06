@@ -74,7 +74,8 @@ class readManager:
         #     # Connect to the database
         #     self.conn = psycopg2.connect(database = config['DATABASE'], user = config['USER'], password = config['PASSWORD'], 
         #                         host = config['HOST'], port = config['PORT'])
-        #     self.cur=self.conn.cursor()
+        #     self.conn.autocommit = True
+        # self.cur=self.conn.cursor() 
 
         #     # Create the tables if they don't exist
         #     self.consumer_table = ConsumerDBMS(self.conn, self.cur) 

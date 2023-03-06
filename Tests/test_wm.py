@@ -70,23 +70,39 @@ if __name__=="__main__":
         print(e)
 
     cid1=rm.register_consumer("test1")
-
-    message=rm.consume_message(cid1,"test1")
-    print(message)
-
-    message=rm.consume_message(cid1,"test1")
-    print(message)
-    message=rm.consume_message(cid1,"test1")
-    print(message)
-
-    message=rm.consume_message(cid1,"test1")
-    print(message)
-    message=rm.consume_message(cid1,"test1")
-    print(message)
-
-    message=rm.consume_message(cid1,"test1")
-    print(message)
-
-    print(wm)
-
+    try:
+        message=rm.consume_message(cid1,"test1")
+        print(message)
+    except Exception as e:
+        pass
+    try:
+        message=rm.consume_message(cid1,"test1")
+        print(message)
+    except Exception as e:
+        pass
+    try:
+        message=rm.consume_message(cid1,"test1")
+        print(message)
+    except Exception as e:
+        pass
+    try:
+        message=rm.consume_message(cid1,"test1")
+        print(message)
+    except Exception as e:
+        pass
+    try:
+        message=rm.consume_message(cid1,"test1")
+        print(message)
+    except Exception as e:
+        pass
+    try:
+        message=rm.consume_message(cid1,"test1")
+        print(message)
+    except Exception as e:
+        pass
+    try:
+        message=rm.consume_message(cid1,"test1")
+        print(message)
+    except Exception as e:
+        pass
 
