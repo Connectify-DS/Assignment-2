@@ -3,6 +3,7 @@ import psycopg2
 from config import *
 import random
 from database_structures.health_dbms import HealthDBMS
+from models.write_manager import HEALTH_DELAY_THRESHOLD
 from myqueue import MyBroker
 from in_memory_structures import ConsumerTable, ProducerTable, TopicTable, MessageTable
 from database_structures import BrokerDBMS, TopicDBMS_WM, PartitionDMBS, ConsumerDBMS
@@ -187,6 +188,8 @@ class readManager:
                 self.offsets[consumer_id][partition_name] = 0
 
         MyBroker.register_consumer(topic_name, self.own_port, self.rms)
+        self.health_logger.add_update_health_log(
+            'broker', self.own_port, time.time())
         return consumer_id
 
     def consume_message(self, consumer_id, topic_name):
@@ -233,9 +236,15 @@ class readManager:
             self.offsets[consumer_id][partition_name] += 1
 
         url = "http://127.0.0.1:" + str(broker_port)
-        return MyBroker.consume_message(url, partition_name, offset, consumer_id, self.own_port, self.rms)
+        broker_consumer_data = MyBroker.consume_message(
+            url, partition_name, offset, consumer_id, self.own_port, self.rms)
+        self.health_logger.add_update_health_log(
+            'broker', broker_port, time.time())
+        return broker_consumer_data
 
     def health_check(self):
         # This function will check the last use time of the consumers and log whether
         # any consumer has not produced a message for a long time (set arbitrary threshold for now)
-        pass
+        inactive_consumer = self.health_logger.get_inactive_actors(
+            'consumer', HEALTH_DELAY_THRESHOLD)
+        return inactive_consumer

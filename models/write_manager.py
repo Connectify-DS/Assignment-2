@@ -131,6 +131,8 @@ class writeManager:
 
             partition_name = topic_name + ".1"
             self.partition_dbms.add_partition(partition_name, broker_id)
+            self.health_logger.add_update_health_log(
+                'broker', broker_port, time.time())
             print(f"broker Port: {broker_port}")
         else:
             self.topics.append(topic_name)
@@ -152,6 +154,8 @@ class writeManager:
             partition_name = topic_name + "." + str(partition_id)
 
             self.partition_dbms.add_partition(partition_name, broker_id)
+            self.health_logger.add_update_health_log(
+                'broker', broker_port, time.time())
         else:
             broker_id = random.choice(self.brokerId)
             broker_port = self.broker_port[broker_id]
@@ -165,6 +169,8 @@ class writeManager:
         url = "http://127.0.0.1:" + str(broker_port)
         MyBroker.create_partition(
             url, topic_name, partition_name, broker_id, self.read_manager_ports)
+        self.health_logger.add_update_health_log(
+            'broker', broker_port, time.time())
         return partition_name, broker_port
 
     def list_topics(self):
@@ -245,12 +251,12 @@ class writeManager:
         url = "http://127.0.0.1:" + str(broker_port)
 
         resp = MyBroker.publish_message(url, partition_name, message)
-
+        self.health_logger.add_update_health_log(
+            'broker', broker_port, time.time())
         if (num_msgs/num_partition) > PARTITION_THRESHOLD:
             print(
                 f"Threshold exceeded. Adding new partition for topic {topic_name}")
             self.add_partition(topic_name)
-
         return resp
 
     def health_check(self):

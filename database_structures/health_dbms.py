@@ -51,7 +51,7 @@ class HealthDBMS:
             self.cur.execute("""
                 SELECT LASTUPDATEDTIME FROM HEALTHLOG
                 WHERE TYPE = %s AND ACTORID = %s
-            """, (type,actorid,))
+            """, (type, actorid,))
 
             row = self.cur.fetchone()
             last_active_timestamp = None
@@ -63,15 +63,15 @@ class HealthDBMS:
             self.conn.rollback()
             self.lock.release()
 
-    def get_inactive_actors(self,type,timedelta_threshold):
+    def get_inactive_actors(self, type, timedelta_threshold):
         self.lock.acquire()
         current_time = time.time()
         try:
-            #Fetch. all the actors with time less than current_time-timedelta_threshold
+            # Fetch. all the actors with time less than current_time-timedelta_threshold
             self.cur.execute("""
                 SELECT ACTORID FROM HEALTHLOG
                 WHERE TYPE = %s AND LASTUPDATEDTIME < (%s)
-            """, (type,current_time-timedelta_threshold,))
+            """, (type, current_time-timedelta_threshold,))
 
             inactive_actors = []
             for row in self.cur.fetchall():
