@@ -126,7 +126,7 @@ def registerConsumer():
         cid = rm.register_consumer(topic_name=topic_name)
         resp = {
             "status": "success",
-            "message": f'Consumer ID {cid} registered for topic {topic_name}',
+            "message": f'Consumer ID {cid} subscribed to topic {topic_name}',
         }
         return jsonify(resp), 200
     except Exception as e:
@@ -151,7 +151,7 @@ def retrieve():
         rm.consume_message(consumer_id=consumer_id, topic_name=topic_name)
         resp = {
             "status": "success",
-            "message": f'Consumer ID {consumer_id} published in topic {topic_name}',
+            "message": f'Consumer ID {consumer_id} retrieved message from topic {topic_name}',
         }
         return jsonify(resp), 200
     except Exception as e:

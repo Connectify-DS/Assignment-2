@@ -23,7 +23,7 @@ class MyBroker:
             
             response = r.json()
             if response["status"]=="failure":
-                raise Exception(f"{url}: Failed to create topic")
+                raise Exception(f"{url}: Failed to add broker")
             return response
         
     @staticmethod
@@ -98,7 +98,7 @@ class MyBroker:
             
             response = r.json()
             if response["status"]=="failure":
-                raise Exception(f"{url}: Failed to create topic")
+                raise Exception(f"{url}: Failed to create partition")
             
 
     # list topics in the broker
@@ -123,9 +123,36 @@ class MyBroker:
 
         response = r.json()
         if response["status"]=="failure":
-            raise Exception(f"{url}: Failed to create topic")
+            raise Exception(f"{url}: Failed to list topic")
         return response
-       
+    
+    @staticmethod
+    def register_consumer(topic_name:str, own_port:str, rms):
+        for rm in rms:
+            if rm == own_port:
+                continue
+            url = "http://127.0.0.1:" + str(rm) + "/consumer/register"
+            data = {"topic_name" : topic_name}
+            r = None
+            
+            try:
+                r = requests.post(url, json = data)
+                r.raise_for_status()
+            except requests.exceptions.HTTPError as errh:
+                if errh.response.status_code==400:
+                    raise Exception(f"{url} Failed: "+ str(errh.response.json()["message"]))
+                raise errh
+            except requests.exceptions.ConnectionError as errc:
+                raise errc
+            
+            if r is None:
+                raise Exception("Null response")
+            
+            response = r.json()
+
+            if response["status"]=="failure":
+                raise Exception(f"{url}: Failed to register Consumer")
+    
     # Publish Message to Topic
     # Returns True on Success
     @staticmethod
@@ -157,7 +184,7 @@ class MyBroker:
     # Recieve Message Of Topic
     # Returns None on Failure
     @staticmethod
-    def consume_message(url:str, topic_name:str, offset:int):
+    def consume_message(url:str, topic_name:str, offset:int, consumer_id:int, own_port:str, rms):
         consume_url = url +  "/consumer/consume"
         data = {"topic_name" : topic_name,
                 'offset': str(offset)}
@@ -180,7 +207,32 @@ class MyBroker:
 
         if response["status"]=="failure":
             raise Exception(f"{url}: Failed to consume message")
-        return response
+    
+        for rm in rms:
+            if rm == own_port:
+                    continue
+            url = "http://127.0.0.1:" + str(rm) + "/consumer/consume"
+            data = {"consumer_id" : consumer_id,
+                    "topic_name" : topic_name}
+            r = None
+            
+            try:
+                r = requests.post(url, json = data)
+                r.raise_for_status()
+            except requests.exceptions.HTTPError as errh:
+                if errh.response.status_code==400:
+                    raise Exception(f"{url} Failed: "+ str(errh.response.json()["message"]))
+                raise errh
+            except requests.exceptions.ConnectionError as errc:
+                raise errc
+            
+            if r is None:
+                raise Exception("Null response")
+            
+            response = r.json()
+
+            if response["status"]=="failure":
+                raise Exception(f"{url}: Failed to retrieve message")
      
 
 

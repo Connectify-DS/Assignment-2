@@ -138,23 +138,23 @@ class writeManager:
         # Create the partition by calling create_topic of MyBroker instance
 
         if self.ispersistent:
-            broker_id,broker_port = self.broker_dbms.get_random_broker()
+            broker_id, broker_port = self.broker_dbms.get_random_broker()
             partition_id=self.topic_dbms.add_partition(topic_name)
 
             partition_name = topic_name + "." + str(partition_id)
 
             self.partition_dbms.add_partition(partition_name,broker_id)
         else:
-            curr_id = random.choice(self.brokerId)
-            broker_port = self.broker_port[curr_id]
+            broker_id = random.choice(self.brokerId)
+            broker_port = self.broker_port[broker_id]
 
             self.topic_numPartitions[topic_name] += 1
             partition_name = topic_name + "." + str(self.topic_numPartitions[topic_name])
 
-            self.partition_broker[partition_name] = curr_id
+            self.partition_broker[partition_name] = broker_id
 
         url = "http://127.0.0.1:" + str(broker_port)
-        MyBroker.create_partition(url, topic_name, partition_name, curr_id, self.read_manager_ports)
+        MyBroker.create_partition(url, topic_name, partition_name, broker_id, self.read_manager_ports)
         return partition_name,broker_port
 
 

@@ -15,6 +15,8 @@ class readManager:
         self.ispersistent=config['IS_PERSISTENT']
         self.init_brokers=config['INIT_BROKERS']
         self.curr_port=1000
+        self.rms = config['READ_MANAGER_PORT']
+        self.own_port = config["SERVER_PORT"]
 
         if self.ispersistent:
             engine=create_engine(f"postgresql://{config['USER']}:{config['PASSWORD']}@{config['HOST']}:{config['PORT']}/{config['DATABASE']}")
@@ -175,10 +177,11 @@ class readManager:
                 partition_name = topic_name + "." + str(i)
                 self.offsets[consumer_id][partition_name] = 0
 
+        MyBroker.register_consumer(topic_name, self.own_port, self.rms)
         return consumer_id
 
 
-    def consume_message(self,consumer_id,topic_name):
+    def consume_message(self, consumer_id, topic_name):
         # Check if Topic is subscribed by consumer can publish to the topic.
         # Assign Partition (Round Robin)
         # Retrieve offset : consumer table increase_offset function
@@ -217,8 +220,7 @@ class readManager:
             self.offsets[consumer_id][partition_name] += 1
 
         url = "http://127.0.0.1:" + str(broker_port)
-
-        return MyBroker.consume_message(url, partition_name, offset)
+        return MyBroker.consume_message(url, partition_name, offset, consumer_id, self.own_port, self.rms)
 
 
     def health_check(self):
