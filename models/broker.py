@@ -13,6 +13,7 @@ class Broker:
     registering producers and consumers, and the enqueueing and dequeueing of messages.
     """
     def __init__(self,config):
+        self.persistent=config['IS_PERSISTENT']
         if config['IS_PERSISTENT']:
             engine=create_engine(f"postgresql://{config['USER']}:{config['PASSWORD']}@{config['HOST']}:{config['PORT']}/{config['DATABASE']}")
             if not database_exists(engine.url):

@@ -116,7 +116,7 @@ class readManager:
             self.broker_port[broker_id] = port
 
     def add_topic(self, topic_name):
-        # Handle Metadata of Read Manager -> Do not request broker
+        # Adds topic without initialising any partition
         if self.ispersistent:
             self.topic_dbms.add_topic(topic_name)
         else:
@@ -125,9 +125,9 @@ class readManager:
             self.topics_offset[topic_name] = 0
             self.topic_numPartitions[topic_name] = 0
 
+
     def add_partition(self, topic_name, partition_name, broker_id):
-        # Handle Metadata of Read Manager -> Do not request broker
-        # This function may not be useful. 
+        # Adds a partition to the topic and assign it to the broker id
         if self.ispersistent:
             partition_id=self.topic_dbms.add_partition(topic_name)
             partition_name = topic_name + "." + str(partition_id)
@@ -151,7 +151,7 @@ class readManager:
         else:
             return self.topics
 
-    def register_consumer(self,topic_name):
+    def register_consumer(self,topic_name, sync=1):
         # Check if Topic Exists. If not Return Error
         # Add to Consumer Table (register_to_topic Function) -> Returns ID
         # Handle Metadata
@@ -176,12 +176,12 @@ class readManager:
             for i in range(1,self.topic_numPartitions[topic_name]+1):
                 partition_name = topic_name + "." + str(i)
                 self.offsets[consumer_id][partition_name] = 0
-
-        MyBroker.register_consumer(topic_name, self.own_port, self.rms)
+        if sync==1:
+            MyBroker.register_consumer(topic_name, self.own_port, self.rms)
         return consumer_id
 
 
-    def consume_message(self, consumer_id, topic_name):
+    def consume_message(self, consumer_id, topic_name, sync=1):
         # Check if Topic is subscribed by consumer can publish to the topic.
         # Assign Partition (Round Robin)
         # Retrieve offset : consumer table increase_offset function
@@ -218,9 +218,9 @@ class readManager:
             
             offset = self.offsets[consumer_id][partition_name]
             self.offsets[consumer_id][partition_name] += 1
-
+        
         url = "http://127.0.0.1:" + str(broker_port)
-        return MyBroker.consume_message(url, partition_name, offset, consumer_id, self.own_port, self.rms)
+        return MyBroker.consume_message(url, partition_name, offset, consumer_id, self.own_port, self.rms, sync)
 
 
     def health_check(self):

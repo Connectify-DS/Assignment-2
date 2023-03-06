@@ -68,7 +68,7 @@ class TopicDBMS_WM:
 
             self.conn.commit()
             self.lock.release()
-            return pid
+            return pid+1
         except Exception as e:
             self.conn.rollback()
             self.lock.release()

@@ -137,7 +137,9 @@ def consumeMessage():
     """
     rm_request_url=config['READ_MANAGER_URLS'][curr_id]+"/consumer/consume"
     curr_id=(curr_id+1)%num_rms
-    return handle_request(rm_request_url,request.json,"Read Manager","GET")
+    data=request.json
+    data["sync"]=1
+    return handle_request(rm_request_url,data,"Read Manager","GET")
 
 @app.route('/consumer/register', methods=['POST'])
 def registerProducer():
@@ -146,7 +148,9 @@ def registerProducer():
     """
     rm_request_url=config['READ_MANAGER_URLS'][curr_id]+"/consumer/register"
     curr_id=(curr_id+1)%num_rms
-    return handle_request(rm_request_url,request.json,"Read Manager")
+    data=request.json
+    data["sync"]=1
+    return handle_request(rm_request_url,data,"Read Manager")
   
 if __name__ == "__main__":
     app.run(debug=True,port=config['SERVER_PORT'])
