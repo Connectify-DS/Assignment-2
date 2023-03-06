@@ -70,13 +70,14 @@ class TopicDBMS:
             row=self.cur.fetchone()
             # print("In Get Topic Queue, Topic Name = ",row)
             
-            self.lock.release()
+            
             tq= TopicQueueDBMS(
                 topic_name=row[1],
                 cur=self.cur,
                 conn=self.conn,
                 lock=self.lock
             )
+            self.lock.release()
             
             return tq
         except:

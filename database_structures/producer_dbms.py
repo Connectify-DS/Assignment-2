@@ -1,4 +1,3 @@
-from models import Producer
 import psycopg2
 import sys
 sys.path.append("..")
@@ -17,14 +16,15 @@ class ProducerDBMS:
             self.cur.execute("""
                 CREATE TABLE IF NOT EXISTS PRODUCERS(
                 ID SERIAL PRIMARY KEY NOT NULL,
-                TOPIC TEXT NOT NULL);
+                TOPIC TEXT NOT NULL,
+                FOREIGN KEY (TOPIC) REFERENCES TOPICS_WM(NAME));
             """)
 
             self.conn.commit()
         except:
             self.conn.rollback()
 
-    def register_new_producer_to_topic(self,topic_name):
+    def add_producer(self, topic_name):
         self.lock.acquire()
         try:
             self.cur.execute("""
@@ -38,33 +38,75 @@ class ProducerDBMS:
             self.conn.commit()
             self.lock.release()
             return producer_id
-        except:
+        except Exception as e:
             # print("Error while registering producer")
             self.conn.rollback()
             self.lock.release()
+            raise Exception(f"DBMS Error: Could not add producer with topic name: {topic_name}: {str(e)}")
 
-    def get_producer(self,producer_id):
+    def get_num_producers(self):
         self.lock.acquire()
         try:
             self.cur.execute("""
-                SELECT * FROM PRODUCERS
-                WHERE ID = %s
-            """,(producer_id,))
-
+                SELECT COUNT(*) FROM PRODUCERS
+            """)
             try:
                 row=self.cur.fetchone()
-                if row is None:
-                    raise Exception("Invalid Producer Id")
             except Exception as e:
                 raise e
-            
-            p= Producer(
-                    producer_id=row[0],
-                    producer_topic=row[1]
-                )
+            if row is None:
+                raise Exception("No producers present in database")
             self.lock.release()
-            return p
+            return row[0]
         except Exception as e:
             # print(e)
             self.conn.rollback()
             self.lock.release()
+            raise Exception(f"DBMS Error: Could not get no. of producers: {str(e)}")
+    
+    def check_producer_id(self, producer_id):
+        self.lock.acquire()
+        try:
+            self.cur.execute("""
+                SELECT EXISTS (
+                    SELECT 1 FROM PRODUCERS 
+                    WHERE ID = %s)
+            """, (producer_id,))
+            try:
+                row=self.cur.fetchone()
+            except Exception as e:
+                raise e
+            
+            if row is None:
+                raise Exception("Could not execute query")
+            self.lock.release()
+            return row[0]
+        except Exception as e:
+            # print(e)
+            self.conn.rollback()
+            self.lock.release()
+            raise Exception(f"DBMS Error: Could not check producer_id {producer_id}: {str(e)}")
+    
+    def check_producer_topic_link(self, producer_id, topic_name):
+        self.lock.acquire()
+        try:
+            self.cur.execute("""
+                SELECT EXISTS (
+                    SELECT 1 FROM PRODUCERS 
+                    WHERE ID = %s AND
+                    TOPIC = %s)
+            """, (producer_id, topic_name,))
+            try:
+                row=self.cur.fetchone()
+            except Exception as e:
+                raise e
+            
+            if row is None:
+                raise Exception("Could not execute query")
+            self.lock.release()
+            return row[0]
+        except Exception as e:
+            # print(e)
+            self.conn.rollback()
+            self.lock.release()
+            raise Exception(f"DBMS Error: Could not check link between producer_id {producer_id} - topic_name {topic_name}: {str(e)}")

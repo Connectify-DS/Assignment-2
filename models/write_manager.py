@@ -7,6 +7,10 @@ from myqueue import MyBroker
 import random
 import yaml
 import os
+from sqlalchemy import create_engine
+from sqlalchemy_utils import database_exists, create_database
+
+PARTITION_THRESHOLD = 100
 
 # Note:
 # Use MyBroker class from myqueue folder to create, publish, consume, list topics as that class
@@ -15,8 +19,17 @@ class writeManager:
     def __init__(self, config):
         self.ispersistent = config['IS_PERSISTENT']
         self.init_brokers=config['INIT_BROKERS']
+        self.read_manager_ports = config['READ_MANAGER_PORT']
 
         if self.ispersistent:
+            engine=create_engine(f"postgresql://{config['USER']}:{config['PASSWORD']}@{config['HOST']}:{config['PORT']}/{config['DATABASE']}")
+            if not database_exists(engine.url):
+                create_database(engine.url)
+            if(database_exists(engine.url)):
+                print(f"Database {config['DATABASE']} Created/Exists")
+            else:
+                raise Exception("Database Could not be created")
+            
             self.topic_dbms=TopicDBMS_WM(config)
             self.broker_dbms=BrokerDBMS(config)
             self.partition_dbms=PartitionDMBS(config)
@@ -31,6 +44,7 @@ class writeManager:
             self.topics_offset = {}
             self.partition_broker = {}      #Partition -> Broker ID
             self.topic_numPartitions = {}  #Topic -> num_partition
+            self.topic_numMsgs = {}
             self.broker_port = {} ## List of id to broker_port
             self.brokerId = []
             self.producer_topic = {}
@@ -92,6 +106,7 @@ class writeManager:
         
         #start a new server
         os.system('python3 ../broker_app.py -c ../configs/broker{broker_id}.yaml')
+        MyBroker.add_broker(port, self.read_manager_ports)
         return broker_id
 
     def add_topic(self, topic_name):
@@ -114,17 +129,10 @@ class writeManager:
         else:
             self.topics.append(topic_name)
             self.topics_offset[topic_name] = 0
-            self.topic_numPartitions[topic_name] = 1
-
-            broker_id=random.choice(self.brokerId)
-            broker_port = self.broker_port[broker_id]
+            self.topic_numPartitions[topic_name] = 0
             
-            partition_name = topic_name + ".1"
-            self.partition_broker[partition_name] = broker_id
-
-        url = "http://127.0.0.1:" + str(broker_port)
-        
-        return MyBroker.create_topic(url, partition_name)
+            MyBroker.add_topic(topic_name, self.read_manager_ports)
+            return self.add_partition(topic_name)
 
 
     def add_partition(self,topic_name):
@@ -133,23 +141,23 @@ class writeManager:
         # Create the partition by calling create_topic of MyBroker instance
 
         if self.ispersistent:
-            broker_id,broker_port = self.broker_dbms.get_random_broker()
-            num_partitions=self.topic_dbms.add_partition(topic_name)
+            broker_id, broker_port = self.broker_dbms.get_random_broker()
+            partition_id=self.topic_dbms.add_partition(topic_name)
 
-            partition_name = topic_name + "." + str(num_partitions)
+            partition_name = topic_name + "." + str(partition_id)
 
             self.partition_dbms.add_partition(partition_name,broker_id)
         else:
-            curr_id = random.choice(self.brokerId)
-            broker_port = self.broker_port[curr_id]
+            broker_id = random.choice(self.brokerId)
+            broker_port = self.broker_port[broker_id]
 
             self.topic_numPartitions[topic_name] += 1
             partition_name = topic_name + "." + str(self.topic_numPartitions[topic_name])
 
-            self.partition_broker[partition_name] = curr_id
+            self.partition_broker[partition_name] = broker_id
 
         url = "http://127.0.0.1:" + str(broker_port)
-        MyBroker.create_topic(url, partition_name)
+        MyBroker.create_partition(url, topic_name, partition_name, broker_id, self.read_manager_ports)
         return partition_name,broker_port
 
 
@@ -199,7 +207,8 @@ class writeManager:
             if not self.producer_dbms.check_producer_topic_link(producer_id,topic_name):
                 raise Exception("ProducerId is not subscribed to the topic")
             
-            curr_partition=self.topic_dbms.get_current_partition(topic_name) ## round robin
+            curr_partition, num_partition, num_msgs = self.topic_dbms.get_current_partition(topic_name, 1) ## round robin
+            num_msgs += 1
             partition_name = topic_name + "." + str(curr_partition)
 
             broker_port=self.partition_dbms.get_broker_port_from_partition(partition_name)
@@ -212,14 +221,26 @@ class writeManager:
             curr_partition = random.randint(1,self.topic_numPartitions[topic_name])
             curr_partition = self.topics_offset[topic_name]%self.topic_numPartitions[topic_name] + 1
             self.topics_offset[topic_name] = (self.topics_offset[topic_name] + 1)%self.topic_numPartitions[topic_name]
+            if topic_name not in self.topic_numMsgs:
+                self.topic_numMsgs[topic_name] = 1
+            else:
+                self.topic_numMsgs[topic_name] += 1
 
             partition_name = topic_name + "." + str(curr_partition)
             curr_id = self.partition_broker[partition_name]
             broker_port = self.broker_port[curr_id]
+            num_partition = self.topic_numPartitions[topic_name]
+            num_msgs = self.topic_numMsgs[topic_name]
 
         url = "http://127.0.0.1:" + str(broker_port)
  
-        return MyBroker.publish_message(url, partition_name, message)
+        resp = MyBroker.publish_message(url, partition_name, message)
+
+        if (num_msgs/num_partition) > PARTITION_THRESHOLD:
+            print(f"Threshold exceeded. Adding new partition for topic {topic_name}")
+            self.add_partition(topic_name)
+        
+        return resp
 
 
     def health_check(self):

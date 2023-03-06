@@ -1,9 +1,12 @@
-from models import Message
 import psycopg2
 import sys
 sys.path.append("..")
 from config import *
 import threading
+
+class Message:
+    def __init__(self, message):
+        self.message = message
 
 class MessageDBMS:
     def __init__(self,config):
