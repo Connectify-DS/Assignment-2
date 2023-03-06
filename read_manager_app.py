@@ -8,8 +8,11 @@ from models import readManager
 import yaml
 import argparse
 
+parser = argparse.ArgumentParser()
+parser.add_argument('-c', '--config', help='config file path', type=str)
+args = parser.parse_args()
 config=None
-with open('configs/rm.yaml') as f:
+with open(args.config) as f:
     config = yaml.safe_load(f)
 
 app = Flask(__name__)
@@ -50,6 +53,7 @@ def addTopic():
         return jsonify(resp), 400
     try:
         topic_name = req['topic_name']
+        rm.add_topic(topic_name)
         resp = {
             "status": "success",
             "message": f"Topic {topic_name} added",

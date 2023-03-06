@@ -32,8 +32,8 @@ def test_topics():
     print(f"Added Successfully, ID={topic_id}")
 
     print("Adding Partition to topic")
-    num_partitions=topic_dbms.add_partition("test1")
-    print(f"Added new partition, current number of partitions: {num_partitions}")
+    partition_id=topic_dbms.add_partition("test1")
+    print(f"Added new partition, current partition ID: {partition_id}")
 
     print("Adding Topic Test2")
     topic_id=topic_dbms.add_topic("test2")
