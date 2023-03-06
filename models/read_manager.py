@@ -37,10 +37,6 @@ class readManager:
             self.partition_dbms = PartitionDMBS(config)
             self.consumer_dbms = ConsumerDBMS(config)
             self.health_logger = HealthDBMS(config)
-
-            self.health_logger = Hea
-            # self.num_consumers = self.consumer_dbms.get_num_consumers()
-            # self.num_brokers = self.broker_dbms.get_num_brokers()
             self.drop_tables()
             self.create_tables()
         else:
@@ -251,4 +247,9 @@ class readManager:
         # any consumer has not produced a message for a long time (set arbitrary threshold for now)
         inactive_consumer = self.health_logger.get_inactive_actors(
             'consumer', HEALTH_DELAY_THRESHOLD)
-        return inactive_consumer
+        inactive_brokers=self.health_logger.get_inactive_actors('broker',HEALTH_DELAY_THRESHOLD)
+        if inactive_consumer!=None or len(inactive_consumer)>0:
+            print("Consumers who have been inactive for ",HEALTH_DELAY_THRESHOLD, "have the following consumer IDs",inactive_consumer)
+        if inactive_brokers!=None or len(inactive_brokers)>0:
+            print("Brokers who have been inactive for ",HEALTH_DELAY_THRESHOLD, "have the following brokers IDs",inactive_brokers)
+        return inactive_consumer, inactive_brokers

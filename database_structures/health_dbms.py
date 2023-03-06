@@ -1,13 +1,24 @@
 import threading
 import time
-from config import *
+# from config import *
 import psycopg2
 import sys
+from sqlalchemy import create_engine
+from sqlalchemy_utils import database_exists, create_database
 sys.path.append("..")
 
 
 class HealthDBMS:
     def __init__(self, config):
+        if  not config['IS_PERSISTENT']:
+            engine = create_engine(
+                f"postgresql://{config['USER']}:{config['PASSWORD']}@{config['HOST']}:{config['PORT']}/{config['DATABASE']}")
+            if not database_exists(engine.url):
+                create_database(engine.url)
+            if (database_exists(engine.url)):
+                print(f"Database {config['DATABASE']} Created/Exists")
+            else:
+                raise Exception("Database Could not be created")
         self.conn = psycopg2.connect(database=config['DATABASE'], user=config['USER'], password=config['PASSWORD'],
                                      host=config['HOST'], port=config['PORT'])
         self.cur = self.conn.cursor()
@@ -19,7 +30,7 @@ class HealthDBMS:
                 CREATE TABLE IF NOT EXISTS HEALTHLOG (
                 TYPE VARCHAR(20) NOT NULL,
                 ACTORID SERIAL NOT NULL,
-                LASTUPDATEDTIME DATETIME NOT NULL,
+                LASTUPDATEDTIME BIGINT NOT NULL,
                 PRIMARY KEY (TYPE, ACTORID));
             """)
 
@@ -29,21 +40,20 @@ class HealthDBMS:
 
     def add_update_health_log(self, type, actorid, last_updated_time):
         self.lock.acquire()
+        #last_updated_time=DATETIME(last_updated_time)
         try:
             self.cur.execute("""
             INSERT INTO HEALTHLOG (TYPE, ACTORID, LASTUPDATEDTIME)
-            VALUES (%s, %s, %s)
+            VALUES (%s, %s, (%s))
             ON CONFLICT (TYPE, ACTORID)
-            DO UPDATE SET LASTUPDATEDTIME = excluded.LASTUPDATEDTIME;
-            """, (type, actorid, last_updated_time))
-            add_update_result = self.cur.fetchone()
-
+            DO UPDATE SET LASTUPDATEDTIME = excluded.LASTUPDATEDTIME
+            """, (type, actorid, last_updated_time, ))
             self.conn.commit()
             self.lock.release()
-            return add_update_result
-        except:
+        except Exception as e:
             self.conn.rollback()
             self.lock.release()
+            raise Exception(f"DBMS Error: Could not insert add update health log: {actorid}: {str(e)}")
 
     def get_last_active_time_stamp(self, type, actorid):
         self.lock.acquire()

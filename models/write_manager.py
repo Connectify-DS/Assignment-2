@@ -253,7 +253,8 @@ class writeManager:
         url = "http://127.0.0.1:" + str(broker_port)
 
         resp = MyBroker.publish_message(url, partition_name, message)
-        self.health_logger.add_update_health_log(
+        if self.ispersistent:
+            self.health_logger.add_update_health_log(
             'broker', broker_port, time.time())
         if (num_msgs/num_partition) > PARTITION_THRESHOLD:
             print(f"Threshold exceeded. Adding new partition for topic {topic_name}")
@@ -267,4 +268,9 @@ class writeManager:
         # any producer has not produced a message for a long time (set arbitrary threshold for now)
         inactive_producers = self.health_logger.get_inactive_actors(
             'producer', HEALTH_DELAY_THRESHOLD)
-        return inactive_producers
+        inactive_brokers=self.health_logger.get_inactive_actors('broker',HEALTH_DELAY_THRESHOLD)
+        if inactive_producers!=None or len(inactive_producers)>0:
+            print("Producers who have been inactive for ",HEALTH_DELAY_THRESHOLD, "have the following producer IDs",inactive_producers)
+        if inactive_brokers!=None or len(inactive_brokers)>0:
+            print("Brokers who have been inactive for ",HEALTH_DELAY_THRESHOLD, "have the following brokers IDs",inactive_brokers)
+        return inactive_producers,inactive_brokers
