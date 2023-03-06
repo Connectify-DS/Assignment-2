@@ -221,7 +221,10 @@ class writeManager:
             curr_partition = random.randint(1,self.topic_numPartitions[topic_name])
             curr_partition = self.topics_offset[topic_name]%self.topic_numPartitions[topic_name] + 1
             self.topics_offset[topic_name] = (self.topics_offset[topic_name] + 1)%self.topic_numPartitions[topic_name]
-            self.topic_numMsgs[topic_name] += 1
+            if topic_name not in self.topic_numMsgs:
+                self.topic_numMsgs[topic_name] = 1
+            else:
+                self.topic_numMsgs[topic_name] += 1
 
             partition_name = topic_name + "." + str(curr_partition)
             curr_id = self.partition_broker[partition_name]

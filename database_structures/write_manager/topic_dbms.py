@@ -97,6 +97,7 @@ class TopicDBMS_WM:
     def get_current_partition(self,topic_name,x=0):
         self.lock.acquire()
         try:
+            # Producer
             if x == 1:
                 self.cur.execute("""
                     UPDATE TOPICS_WM
@@ -105,6 +106,7 @@ class TopicDBMS_WM:
                     WHERE NAME=%s
                     RETURNING OFSET, PARTITIONS, NUM_PARTITIONS, NUM_MSGS
                 """,(topic_name,))
+            # Consumer
             else:
                 self.cur.execute("""
                     UPDATE TOPICS_WM
