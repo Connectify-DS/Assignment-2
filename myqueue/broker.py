@@ -49,7 +49,7 @@ class MyBroker:
             response = r.json()
             if response["status"]=="failure":
                 raise Exception(f"{url}: Failed to create topic")
-            return response
+        return response
     
     @staticmethod
     def create_partition(url:str, topic_name:str, partition_name:str, broker_id:str, rms):
@@ -132,7 +132,8 @@ class MyBroker:
             if rm == own_port:
                 continue
             url = "http://127.0.0.1:" + str(rm) + "/consumer/register"
-            data = {"topic_name" : topic_name}
+            data = {"topic_name" : topic_name,
+                    "sync" : 0}
             r = None
             
             try:
@@ -184,44 +185,19 @@ class MyBroker:
     # Recieve Message Of Topic
     # Returns None on Failure
     @staticmethod
-    def consume_message(url:str, topic_name:str, offset:int, consumer_id:int, own_port:str, rms):
-        consume_url = url +  "/consumer/consume"
-        data = {"topic_name" : topic_name,
-                'offset': str(offset)}
-        r = None
-        
-        try:
-            r = requests.get(consume_url, json = data)
-            r.raise_for_status()
-        except requests.exceptions.HTTPError as errh:
-            if errh.response.status_code==400:
-                raise Exception(f"{consume_url} Failed: "+ str(errh.response.json()["message"]))
-            raise errh
-        except requests.exceptions.ConnectionError as errc:
-            raise errc
-        
-        if r is None:
-            raise Exception("Null response")
-        
-        response = r.json()
-
-        if response["status"]=="failure":
-            raise Exception(f"{url}: Failed to consume message")
-    
-        for rm in rms:
-            if rm == own_port:
-                    continue
-            url = "http://127.0.0.1:" + str(rm) + "/consumer/consume"
-            data = {"consumer_id" : consumer_id,
-                    "topic_name" : topic_name}
+    def consume_message(url:str, topic_name:str, offset:int, consumer_id:int, own_port:str, rms, sync):
+        if sync == 1:
+            consume_url = url +  "/consumer/consume"
+            data = {"topic_name" : topic_name,
+                    'offset': str(offset)}
             r = None
             
             try:
-                r = requests.post(url, json = data)
+                r = requests.get(consume_url, json = data)
                 r.raise_for_status()
             except requests.exceptions.HTTPError as errh:
                 if errh.response.status_code==400:
-                    raise Exception(f"{url} Failed: "+ str(errh.response.json()["message"]))
+                    raise Exception(f"{consume_url} Failed: "+ str(errh.response.json()["message"]))
                 raise errh
             except requests.exceptions.ConnectionError as errc:
                 raise errc
@@ -229,10 +205,41 @@ class MyBroker:
             if r is None:
                 raise Exception("Null response")
             
-            response = r.json()
+            response_actual = r.json()
 
-            if response["status"]=="failure":
-                raise Exception(f"{url}: Failed to retrieve message")
+            if response_actual["status"]=="failure":
+                raise Exception(f"{url}: Failed to consume message")
+        
+            
+            for rm in rms:
+                if rm == own_port:
+                    continue
+                url = "http://127.0.0.1:" + str(rm) + "/consumer/consume"
+                data = {"consumer_id" : consumer_id,
+                        "topic_name" : topic_name.split('.')[0],
+                        "sync" : 0}
+                r = None
+                
+                try:
+                    r = requests.post(url, json = data)
+                    r.raise_for_status()
+                except requests.exceptions.HTTPError as errh:
+                    if errh.response.status_code==400:
+                        raise Exception(f"{url} Failed: "+ str(errh.response.json()["message"]))
+                    raise errh
+                except requests.exceptions.ConnectionError as errc:
+                    raise errc
+                
+                if r is None:
+                    raise Exception("Null response")
+                
+                response = r.json()
+
+                if response["status"]=="failure":
+                    raise Exception(f"{url}: Failed to retrieve message")
+            return response_actual['message']
+        
+        return "Syncing"
      
 
 

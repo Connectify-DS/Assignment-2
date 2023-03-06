@@ -115,7 +115,7 @@ def addPartition():
 @app.route('/consumer/register', methods=['POST'])
 def registerConsumer():
     req = request.json
-    if req is None or 'topic_name' not in req:
+    if req is None or 'topic_name' not in req or 'sync' not in req:
         resp = {
             "status": "failure",
             "message": "Required fields absent in request",
@@ -123,7 +123,9 @@ def registerConsumer():
         return jsonify(resp), 400
     try:
         topic_name = req['topic_name']
-        cid = rm.register_consumer(topic_name=topic_name)
+        sync = req["sync"]
+        cid = rm.register_consumer(topic_name=topic_name, sync=sync)
+        
         resp = {
             "status": "success",
             "message": f'Consumer ID {cid} subscribed to topic {topic_name}',
@@ -139,7 +141,7 @@ def registerConsumer():
 @app.route('/consumer/consume', methods=['POST'])
 def retrieve():
     req = request.json
-    if req is None or 'consumer_id' not in req or 'topic_name' not in req:
+    if req is None or 'consumer_id' not in req or 'topic_name' not in req or 'sync' not in req:
         resp = {
             "status": "failure",
             "message": "Required fields absent in request",
@@ -148,10 +150,11 @@ def retrieve():
     try:
         consumer_id = req['consumer_id']
         topic_name = req['topic_name']
-        rm.consume_message(consumer_id=consumer_id, topic_name=topic_name)
+        sync = req["sync"]
+        act_message=rm.consume_message(consumer_id=consumer_id, topic_name=topic_name, sync=sync)
         resp = {
             "status": "success",
-            "message": f'Consumer ID {consumer_id} retrieved message from topic {topic_name}',
+            "message": f"Consumer ID {consumer_id} retrieved message from topic {topic_name}: {act_message}",
         }
         return jsonify(resp), 200
     except Exception as e:

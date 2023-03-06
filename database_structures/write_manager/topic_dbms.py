@@ -8,6 +8,7 @@ class TopicDBMS_WM:
     def __init__(self,config):
         self.conn = psycopg2.connect(database = config['DATABASE'], user = config['USER'], password = config['PASSWORD'], 
                                 host = config['HOST'], port = config['PORT'])
+        self.conn.autocommit = True
         self.cur=self.conn.cursor()
         self.lock=threading.Lock()
 
@@ -68,7 +69,7 @@ class TopicDBMS_WM:
 
             self.conn.commit()
             self.lock.release()
-            return pid
+            return pid+1
         except Exception as e:
             self.conn.rollback()
             self.lock.release()

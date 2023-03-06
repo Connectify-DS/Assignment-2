@@ -12,8 +12,9 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy_utils import database_exists, create_database
 
-PARTITION_THRESHOLD = 100
+
 HEALTH_DELAY_THRESHOLD = 5*60*60  # 5 mins
+PARTITION_THRESHOLD = 2
 
 # Note:
 # Use MyBroker class from myqueue folder to create, publish, consume, list topics as that class
@@ -139,8 +140,9 @@ class writeManager:
             self.topics_offset[topic_name] = 0
             self.topic_numPartitions[topic_name] = 0
 
-            MyBroker.add_topic(topic_name, self.read_manager_ports)
-            return self.add_partition(topic_name)
+            
+        MyBroker.add_topic(topic_name, self.read_manager_ports)
+        return self.add_partition(topic_name)
 
     def add_partition(self, topic_name):
         # Need to send request to read manager too.
@@ -254,9 +256,10 @@ class writeManager:
         self.health_logger.add_update_health_log(
             'broker', broker_port, time.time())
         if (num_msgs/num_partition) > PARTITION_THRESHOLD:
-            print(
-                f"Threshold exceeded. Adding new partition for topic {topic_name}")
-            self.add_partition(topic_name)
+            print(f"Threshold exceeded. Adding new partition for topic {topic_name}")
+            partition_name,broker_port = self.add_partition(topic_name)
+            print(partition_name,broker_port)
+        
         return resp
 
     def health_check(self):
