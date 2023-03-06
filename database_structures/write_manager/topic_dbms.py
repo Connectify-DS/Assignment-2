@@ -18,6 +18,7 @@ class TopicDBMS_WM:
                 ID SERIAL UNIQUE NOT NULL,
                 NAME TEXT PRIMARY KEY NOT NULL,
                 OFSET INT NOT NULL,
+                PARTITIONS INT[],
                 NUM_PARTITIONS INT NOT NULL);
             """)
 
@@ -29,10 +30,10 @@ class TopicDBMS_WM:
         self.lock.acquire()
         try:
             self.cur.execute("""
-                INSERT INTO TOPICS_WM (NAME,OFSET,NUM_PARTITIONS)
-                VALUES (%s,0,1)
+                INSERT INTO TOPICS_WM (NAME,OFSET,PARTITIONS,NUM_PARTITIONS)
+                VALUES (%s,0,%s,0)
                 RETURNING ID
-            """,(topic_name,))
+            """,(topic_name,'{}',))
 
             id=self.cur.fetchone()[0]
 
@@ -48,19 +49,22 @@ class TopicDBMS_WM:
         self.lock.acquire()
         try:
             self.cur.execute("""
+                SELECT MAX(UNNEST(PARTITIONS))
+                FROM TOPICS_WM
+            """)
+            pid = self.cur.fetchone()[0]
+            if pid==None:
+                pid = 0
+            self.cur.execute("""
                 UPDATE TOPICS_WM
-                SET NUM_PARTITIONS = NUM_PARTITIONS + 1 
+                SET PARTITIONS = PARTITIONS || %d
+                NUM_PARTITIONS = NUM_PARTITIONS + 1 
                 WHERE NAME=%s
-                RETURNING NUM_PARTITIONS
-            """,(topic_name,))
-
-            num_partitions=self.cur.fetchone()[0]
-            if num_partitions==None:
-                raise Exception("DBMS ERROR: Invalid Topic Name")
+            """,(pid+1, topic_name,))
 
             self.conn.commit()
             self.lock.release()
-            return num_partitions
+            return pid
         except Exception as e:
             self.conn.rollback()
             self.lock.release()

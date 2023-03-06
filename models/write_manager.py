@@ -17,6 +17,7 @@ class writeManager:
     def __init__(self, config):
         self.ispersistent = config['IS_PERSISTENT']
         self.init_brokers=config['INIT_BROKERS']
+        self.read_manager_ports = config['READ_MANAGER_PORT']
 
         if self.ispersistent:
             engine=create_engine(f"postgresql://{config['USER']}:{config['PASSWORD']}@{config['HOST']}:{config['PORT']}/{config['DATABASE']}")
@@ -102,6 +103,7 @@ class writeManager:
         
         #start a new server
         os.system('python3 ../broker_app.py -c ../configs/broker{broker_id}.yaml')
+        MyBroker.add_broker(port, self.read_manager_ports)
         return broker_id
 
     def add_topic(self, topic_name):
@@ -124,17 +126,10 @@ class writeManager:
         else:
             self.topics.append(topic_name)
             self.topics_offset[topic_name] = 0
-            self.topic_numPartitions[topic_name] = 1
-
-            broker_id=random.choice(self.brokerId)
-            broker_port = self.broker_port[broker_id]
+            self.topic_numPartitions[topic_name] = 0
             
-            partition_name = topic_name + ".1"
-            self.partition_broker[partition_name] = broker_id
-
-        url = "http://127.0.0.1:" + str(broker_port)
-        
-        return MyBroker.create_topic(url, partition_name)
+            MyBroker.add_topic(topic_name, self.read_manager_ports)
+            return self.add_partition(topic_name)
 
 
     def add_partition(self,topic_name):
@@ -144,9 +139,9 @@ class writeManager:
 
         if self.ispersistent:
             broker_id,broker_port = self.broker_dbms.get_random_broker()
-            num_partitions=self.topic_dbms.add_partition(topic_name)
+            partition_id=self.topic_dbms.add_partition(topic_name)
 
-            partition_name = topic_name + "." + str(num_partitions)
+            partition_name = topic_name + "." + str(partition_id)
 
             self.partition_dbms.add_partition(partition_name,broker_id)
         else:
@@ -159,7 +154,7 @@ class writeManager:
             self.partition_broker[partition_name] = curr_id
 
         url = "http://127.0.0.1:" + str(broker_port)
-        MyBroker.create_topic(url, partition_name)
+        MyBroker.create_partition(url, topic_name, partition_name, curr_id, self.read_manager_ports)
         return partition_name,broker_port
 
 

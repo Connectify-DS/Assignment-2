@@ -100,7 +100,7 @@ class readManager:
 
         self.broker_dbms.conn.commit()
 
-    def add_broker(self,port):
+    def add_broker(self, port):
         # Handle Metadata of Read Manager -> Do not request broker
         if self.ispersistent:
             port = self.curr_port
@@ -113,28 +113,22 @@ class readManager:
             self.curr_port += 100
             self.broker_port[broker_id] = port
 
-    def add_topic(self, topic_name,broker_id):
+    def add_topic(self, topic_name):
         # Handle Metadata of Read Manager -> Do not request broker
         if self.ispersistent:
             self.topic_dbms.add_topic(topic_name)
-
-            partition_name = topic_name + ".1"
-            self.partition_dbms.add_partition(partition_name,broker_id)
         else:
             self.topics.append(topic_name)
             self.topic_consumerid[topic_name] = []
             self.topics_offset[topic_name] = 0
-            self.topic_numPartitions[topic_name] = 1
-
-            partition_name = topic_name + ".1"
-            self.partition_broker[partition_name] = broker_id
+            self.topic_numPartitions[topic_name] = 0
 
     def add_partition(self, topic_name, partition_name, broker_id):
         # Handle Metadata of Read Manager -> Do not request broker
         # This function may not be useful. 
         if self.ispersistent:
-            num_partitions=self.topic_dbms.add_partition(topic_name)
-            partition_name = topic_name + "." + str(num_partitions)
+            partition_id=self.topic_dbms.add_partition(topic_name)
+            partition_name = topic_name + "." + str(partition_id)
 
             self.partition_dbms.add_partition(partition_name,broker_id)
             self.consumer_dbms.add_partition(topic_name, partition_name)
@@ -142,7 +136,7 @@ class readManager:
             self.partition_broker[partition_name] = broker_id
             self.topic_numPartitions[topic_name] += 1
 
-            for i in self.topic_consumerid:
+            for i in self.topic_consumerid[topic_name]:
                 self.offsets[i][partition_name] = 0
 
     def list_topics(self):
