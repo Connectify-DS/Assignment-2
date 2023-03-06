@@ -15,6 +15,30 @@ with open('configs/rm.yaml') as f:
 app = Flask(__name__)
 rm = readManager(config=config)
 
+@app.route('/broker', methods=['POST'])
+def addBroker():
+    req = request.json
+    if req is None or 'port' not in req:
+        resp = {
+            "status": "failure",
+            "message": "Required fields absent in request",
+        }
+        return jsonify(resp), 400
+    try:
+        port = req['port']
+        rm.add_broker(port=port)
+        resp = {
+            "status": "success",
+            "message": f'Broker with port {port} added successfully',
+        }
+        return jsonify(resp), 200
+    except Exception as e:
+        resp = {
+            "status": "failure",
+            "message": str(e),
+        }
+        return jsonify(resp), 400
+
 @app.route('/topics', methods=['POST'])
 def addTopic():
     req = request.json
