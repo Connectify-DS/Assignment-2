@@ -124,9 +124,8 @@ class writeManager:
             self.topics_offset[topic_name] = 0
             self.topic_numPartitions[topic_name] = 0
 
-        self.health_logger.add_update_health_log(
-                'broker', broker_port, time.time())  
         MyBroker.add_topic(topic_name, self.read_manager_ports)
+        self.health_logger.add_update_health_log('broker', broker_port, time.time())
         return self.add_partition(topic_name)
 
             
@@ -160,12 +159,7 @@ class writeManager:
         url = "http://127.0.0.1:" + str(broker_port)
         resp = MyBroker.create_partition(
             url, topic_name, partition_name, broker_id, self.read_manager_ports)
-        self.health_logger.add_update_health_log(
-            'broker', broker_port, time.time())
-        # resp = {"status" : "success",
-        #         "partition_name" : partition_name,
-        #         "broker_port" : broker_port
-        # }
+        self.health_logger.add_update_health_log('broker', broker_port, time.time())
         return resp
 
     def list_topics(self):
@@ -189,12 +183,9 @@ class writeManager:
             #  Add new producer to the healthcheck list with the ID
             #  Save the current time (time.datetime) as the time of creation
             #  You will also have to maintain the last use time (currently empty)
-        self.health_logger.add_update_health_log(
-                'producer', producer_id, time.time())
+        self.health_logger.add_update_health_log('producer', producer_id, time.time())
         if self.ispersistent:
             producer_id = self.producer_dbms.add_producer(topic_name)
-            # self.health_logger.add_update_health_log(
-            #     'producer', producer_id, time.time())
             return producer_id
         else:
             self.num_producers += 1
@@ -239,13 +230,10 @@ class writeManager:
             broker_port = self.broker_port[curr_id]
             num_partition = self.topic_numPartitions[topic_name]
             num_msgs = self.topic_numMsgs[topic_name]
-        self.health_logger.add_update_health_log(
-                'producer', producer_id, time.time())
         url = "http://127.0.0.1:" + str(broker_port)
-
         resp = MyBroker.publish_message(url, partition_name, message)
-        self.health_logger.add_update_health_log(
-            'broker', broker_port, time.time())
+        self.health_logger.add_update_health_log('producer', producer_id, time.time())
+        self.health_logger.add_update_health_log('broker', broker_port, time.time())
         if (num_msgs/num_partition) > PARTITION_THRESHOLD:
             print(f"Threshold exceeded. Adding new partition for topic {topic_name}")
             partition_name,broker_port = self.add_partition(topic_name)
