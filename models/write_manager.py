@@ -132,15 +132,14 @@ class writeManager:
 
             partition_name = topic_name + ".1"
             self.partition_dbms.add_partition(partition_name, broker_id)
-            self.health_logger.add_update_health_log(
-                'broker', broker_port, time.time())
             print(f"broker Port: {broker_port}")
         else:
             self.topics.append(topic_name)
             self.topics_offset[topic_name] = 0
             self.topic_numPartitions[topic_name] = 0
 
-            
+        self.health_logger.add_update_health_log(
+                'broker', broker_port, time.time())  
         MyBroker.add_topic(topic_name, self.read_manager_ports)
         return self.add_partition(topic_name)
 
@@ -156,8 +155,6 @@ class writeManager:
             partition_name = topic_name + "." + str(partition_id)
 
             self.partition_dbms.add_partition(partition_name, broker_id)
-            self.health_logger.add_update_health_log(
-                'broker', broker_port, time.time())
         else:
             broker_id = random.choice(self.brokerId)
             broker_port = self.broker_port[broker_id]
@@ -192,15 +189,16 @@ class writeManager:
 
         if topic_name not in self.list_topics():
             self.add_topic(topic_name)
-
-        if self.ispersistent:
-            producer_id = self.producer_dbms.add_producer(topic_name)
-            # Health Check:
+        # Health Check:
             #  Add new producer to the healthcheck list with the ID
             #  Save the current time (time.datetime) as the time of creation
             #  You will also have to maintain the last use time (currently empty)
-            self.health_logger.add_update_health_log(
+        self.health_logger.add_update_health_log(
                 'producer', producer_id, time.time())
+        if self.ispersistent:
+            producer_id = self.producer_dbms.add_producer(topic_name)
+            # self.health_logger.add_update_health_log(
+            #     'producer', producer_id, time.time())
             return producer_id
         else:
             self.num_producers += 1
@@ -224,10 +222,6 @@ class writeManager:
             partition_name = topic_name + "." + str(curr_partition)
             broker_port = self.partition_dbms.get_broker_port_from_partition(
                 partition_name)
-            # Health Check:
-            #  Update the last use time of the producer based on the producer id
-            self.health_logger.add_update_health_log(
-                'producer', producer_id, time.time())
         else:
             if producer_id not in self.producer_topic:
                 raise Exception("Invalid ProducerId")
@@ -249,12 +243,12 @@ class writeManager:
             broker_port = self.broker_port[curr_id]
             num_partition = self.topic_numPartitions[topic_name]
             num_msgs = self.topic_numMsgs[topic_name]
-
+        self.health_logger.add_update_health_log(
+                'producer', producer_id, time.time())
         url = "http://127.0.0.1:" + str(broker_port)
 
         resp = MyBroker.publish_message(url, partition_name, message)
-        if self.ispersistent:
-            self.health_logger.add_update_health_log(
+        self.health_logger.add_update_health_log(
             'broker', broker_port, time.time())
         if (num_msgs/num_partition) > PARTITION_THRESHOLD:
             print(f"Threshold exceeded. Adding new partition for topic {topic_name}")
