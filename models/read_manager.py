@@ -175,8 +175,8 @@ class readManager:
             num_partitions = self.topic_dbms.get_num_partitions(topic_name)
             consumer_id = self.consumer_dbms.add_consumer(
                 topic_name, num_partitions)
-            self.health_logger.add_update_health_log(
-                'consumer', consumer_id, time.time())
+            #self.health_logger.add_update_health_log(
+            #    'consumer', consumer_id, time.time())
         else:
             consumer_id = self.num_consumers
             self.num_consumers += 1
@@ -186,7 +186,8 @@ class readManager:
             for i in range(1, self.topic_numPartitions[topic_name]+1):
                 partition_name = topic_name + "." + str(i)
                 self.offsets[consumer_id][partition_name] = 0
-
+        self.health_logger.add_update_health_log(
+                'consumer', consumer_id, time.time())
         if sync==1:
             MyBroker.register_consumer(topic_name, self.own_port, self.rms)
             self.health_logger.add_update_health_log('broker', self.own_port, time.time())
@@ -212,6 +213,8 @@ class readManager:
 
             broker_port = self.partition_dbms.get_broker_port_from_partition(partition_name)
             offset = self.consumer_dbms.get_offset(consumer_id, partition_name)
+            # self.health_logger.add_update_health_log(
+            #     'consumer', consumer_id, time.time())
 
             self.health_logger.add_update_health_log('consumer', consumer_id, time.time())
         else:
@@ -232,7 +235,8 @@ class readManager:
 
             offset = self.offsets[consumer_id][partition_name]
             self.offsets[consumer_id][partition_name] += 1
-        
+        self.health_logger.add_update_health_log(
+                'consumer', consumer_id, time.time())
         url = "http://127.0.0.1:" + str(broker_port)
 
         broker_consumer_data = MyBroker.consume_message(url, partition_name, offset, consumer_id, self.own_port, self.rms, sync)
