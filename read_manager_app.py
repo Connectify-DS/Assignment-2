@@ -1,5 +1,5 @@
 """
-Flask app to create a message queue system
+Flask app to create a read manager
 """
 from flask import Flask
 from flask import request

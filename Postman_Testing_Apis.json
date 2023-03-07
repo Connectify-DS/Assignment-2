@@ -53,14 +53,6 @@
 				"header": []
 			},
 			"response": []
-		},
-		{
-			"name": "size",
-			"request": {
-				"method": "GET",
-				"header": []
-			},
-			"response": []
 		}
 	]
 }

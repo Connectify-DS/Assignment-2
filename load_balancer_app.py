@@ -1,5 +1,5 @@
 """
-Flask app to create a message queue system
+Flask app to create a load balancer
 """
 from flask import Flask, redirect
 from flask import request

@@ -1,3 +1,10 @@
+"""
+To parse yaml file, use this
+with open(args.config) as f:
+    config = yaml.safe_load(f)
+    config = Config(**config)
+"""
+
 class Config:
     def __init__(self, **args):
         for key, value in args.items():
@@ -11,10 +18,3 @@ class Config:
                 else:
                   args[key].append(val)
         self.__dict__.update(args)
-
-"""
-To parse yaml file, use this
-with open(args.config) as f:
-    config = yaml.safe_load(f)
-    config = Config(**config)
-"""

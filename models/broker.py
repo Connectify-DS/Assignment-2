@@ -8,9 +8,6 @@ from database_structures import TopicDBMS, MessageDBMS
 from sqlalchemy import create_engine
 from sqlalchemy_utils import database_exists, create_database
 
-# Make Different Database for Each Server: Send a config object
-
-
 class Broker:
     """
     This class is the main class of the system. It is responsible for the creation of topics,

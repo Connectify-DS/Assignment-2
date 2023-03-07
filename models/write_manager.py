@@ -16,10 +16,6 @@ from sqlalchemy_utils import database_exists, create_database
 HEALTH_DELAY_THRESHOLD = 5*60  # 5 mins
 PARTITION_THRESHOLD = 10
 
-# Note:
-# Use MyBroker class from myqueue folder to create, publish, consume, list topics as that class
-# requests the broker server. Initialise it with the broker url.
-
 
 class writeManager:
     def __init__(self, config):
@@ -43,8 +39,6 @@ class writeManager:
             self.producer_dbms = ProducerDBMS(config)
             self.health_logger = HealthDBMS(config)
 
-            # self.num_producers = self.producer_dbms.get_num_producers()
-            # self.num_brokers = self.broker_dbms.get_num_brokers()
             self.drop_tables()
             self.create_tables()
         else:

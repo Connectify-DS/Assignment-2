@@ -196,6 +196,7 @@ class readManager:
             broker_port = self.broker_port[curr_id]
 
             offset = self.offsets[consumer_id][partition_name]
+            self.offsets[consumer_id][partition_name] += 1
         self.health_logger.add_update_health_log('consumer', consumer_id, time.time())
         url = "http://127.0.0.1:" + str(broker_port)
 
@@ -206,7 +207,7 @@ class readManager:
             if self.ispersistent:
                 self.consumer_dbms.decrease_offset(consumer_id, partition_name)
             else:
-                self.offsets[consumer_id][partition_name] += 1
+                self.offsets[consumer_id][partition_name] -= 1
             raise(e)
         return broker_consumer_data
 
