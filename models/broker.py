@@ -1,35 +1,43 @@
 import sys
 import psycopg2
+from database_structures.health_dbms import HealthDBMS
 from in_memory_structures import TopicTable, MessageTable
 from database_structures import TopicDBMS, MessageDBMS
 
 from sqlalchemy import create_engine
 from sqlalchemy_utils import database_exists, create_database
 
-## Make Different Database for Each Server: Send a config object
+# Make Different Database for Each Server: Send a config object
+
+
 class Broker:
     """
     This class is the main class of the system. It is responsible for the creation of topics,
     registering producers and consumers, and the enqueueing and dequeueing of messages.
     """
+
     def __init__(self,config):
+        self.persistent=config['IS_PERSISTENT']
         if config['IS_PERSISTENT']:
-            engine=create_engine(f"postgresql://{config['USER']}:{config['PASSWORD']}@{config['HOST']}:{config['PORT']}/{config['DATABASE']}")
+            engine = create_engine(
+                f"postgresql://{config['USER']}:{config['PASSWORD']}@{config['HOST']}:{config['PORT']}/{config['DATABASE']}")
             if not database_exists(engine.url):
                 create_database(engine.url)
-            if(database_exists(engine.url)):
+            if (database_exists(engine.url)):
                 print(f"Database {config['DATABASE']} Created/Exists")
             else:
                 raise Exception("Database Could not be created")
             # Connect to the database
+
             self.conn = psycopg2.connect(database = config['DATABASE'], user = config['USER'], password = config['PASSWORD'], 
                                 host = config['HOST'], port = config['PORT'])
+            self.conn.autocommit = True
             self.cur=self.conn.cursor()
 
             # Create the tables if they don't exist
             self.message_table = MessageDBMS(config)
             self.topic_table = TopicDBMS(config)
-
+            self.health_logger = HealthDBMS(config)
         else:
             # Create the tables if they don't exist in memory
             self.message_table = MessageTable()
@@ -64,7 +72,7 @@ class Broker:
         Returns a list of all the topics in the system.
         """
         return self.topic_table.get_topic_list()
-        
+
     def enqueue(self, topic_name: str, message: str):
         """
         Enqueues a new message to the given topic.
@@ -87,14 +95,14 @@ class Broker:
             topic_queue.enqueue(message_id)
         except Exception as e:
             raise e
-        
-    def dequeue(self, topic_name: str,offset: int):
+
+    def dequeue(self, topic_name: str, offset: int):
         """
         Removes the next message from the given topic.
         """
         try:
-            ## This is redundant as when we get the topic queue the DBMS will look
-            ## at all the topics and if it does not exist there will be an error
+            # This is redundant as when we get the topic queue the DBMS will look
+            # at all the topics and if it does not exist there will be an error
             # topics = self.list_topics()
             # if topics is None:
             #     raise Exception("No topic registered in this broker")
@@ -108,7 +116,7 @@ class Broker:
             size_rem = topic_queue.size() - offset
             if size_rem <= 0:
                 raise Exception("No messages left to retrieve")
-            
+
             if self.persistent:
                 message_id = topic_queue.get_at_offset(offset+1)
             else:
@@ -120,4 +128,3 @@ class Broker:
                 raise Exception("Could not retrieve message")
         except Exception as e:
             raise e
-            

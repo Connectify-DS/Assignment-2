@@ -9,6 +9,7 @@ class ConsumerDBMS:
     def __init__(self,config):
         self.conn = psycopg2.connect(database = config['DATABASE'], user = config['USER'], password = config['PASSWORD'], 
                                 host = config['HOST'], port = config['PORT'])
+        self.conn.autocommit = True
         self.cur=self.conn.cursor()
         self.lock=threading.Lock()
 

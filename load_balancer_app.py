@@ -21,6 +21,9 @@ with open('configs/load_balancer.yaml') as f:
 
 app = Flask(__name__)
 
+num_rms=config['NUM_READMANAGERS']
+curr_id=0
+
 # Routes
 @app.route('/')
 def index():
@@ -126,6 +129,28 @@ def produceMessage():
     """
     wm_request_url = config['WRITE_MANAGER_URL'] +  "/producer/produce"
     return handle_request(wm_request_url,request.json,"Write Manager")
+
+@app.route('/consumer/consume', methods=['GET'])
+def consumeMessage():
+    """
+    Forward Message to RM to consume message
+    """
+    rm_request_url=config['READ_MANAGER_URLS'][curr_id]+"/consumer/consume"
+    curr_id=(curr_id+1)%num_rms
+    data=request.json
+    data["sync"]=1
+    return handle_request(rm_request_url,data,"Read Manager","GET")
+
+@app.route('/consumer/register', methods=['POST'])
+def registerProducer():
+    """
+    Forward message to RM to register consumer
+    """
+    rm_request_url=config['READ_MANAGER_URLS'][curr_id]+"/consumer/register"
+    curr_id=(curr_id+1)%num_rms
+    data=request.json
+    data["sync"]=1
+    return handle_request(rm_request_url,data,"Read Manager")
   
 if __name__ == "__main__":
     app.run(debug=True,port=config['SERVER_PORT'])

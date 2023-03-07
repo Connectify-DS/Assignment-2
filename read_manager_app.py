@@ -8,12 +8,39 @@ from models import readManager
 import yaml
 import argparse
 
+parser = argparse.ArgumentParser()
+parser.add_argument('-c', '--config', help='config file path', type=str)
+args = parser.parse_args()
 config=None
-with open('configs/rm.yaml') as f:
+with open(args.config) as f:
     config = yaml.safe_load(f)
 
 app = Flask(__name__)
 rm = readManager(config=config)
+
+@app.route('/broker', methods=['POST'])
+def addBroker():
+    req = request.json
+    if req is None or 'port' not in req:
+        resp = {
+            "status": "failure",
+            "message": "Required fields absent in request",
+        }
+        return jsonify(resp), 400
+    try:
+        port = req['port']
+        rm.add_broker(port=port)
+        resp = {
+            "status": "success",
+            "message": f'Broker with port {port} added successfully',
+        }
+        return jsonify(resp), 200
+    except Exception as e:
+        resp = {
+            "status": "failure",
+            "message": str(e),
+        }
+        return jsonify(resp), 400
 
 @app.route('/topics', methods=['POST'])
 def addTopic():
@@ -26,6 +53,7 @@ def addTopic():
         return jsonify(resp), 400
     try:
         topic_name = req['topic_name']
+        rm.add_topic(topic_name)
         resp = {
             "status": "success",
             "message": f"Topic {topic_name} added",
@@ -87,7 +115,7 @@ def addPartition():
 @app.route('/consumer/register', methods=['POST'])
 def registerConsumer():
     req = request.json
-    if req is None or 'topic_name' not in req:
+    if req is None or 'topic_name' not in req or 'sync' not in req:
         resp = {
             "status": "failure",
             "message": "Required fields absent in request",
@@ -95,10 +123,12 @@ def registerConsumer():
         return jsonify(resp), 400
     try:
         topic_name = req['topic_name']
-        cid = rm.register_consumer(topic_name=topic_name)
+        sync = req["sync"]
+        cid = rm.register_consumer(topic_name=topic_name, sync=sync)
+        
         resp = {
             "status": "success",
-            "message": f'Consumer ID {cid} registered for topic {topic_name}',
+            "message": f'Consumer ID {cid} subscribed to topic {topic_name}',
         }
         return jsonify(resp), 200
     except Exception as e:
@@ -111,7 +141,7 @@ def registerConsumer():
 @app.route('/consumer/consume', methods=['POST'])
 def retrieve():
     req = request.json
-    if req is None or 'consumer_id' not in req or 'topic_name' not in req:
+    if req is None or 'consumer_id' not in req or 'topic_name' not in req or 'sync' not in req:
         resp = {
             "status": "failure",
             "message": "Required fields absent in request",
@@ -120,10 +150,11 @@ def retrieve():
     try:
         consumer_id = req['consumer_id']
         topic_name = req['topic_name']
-        rm.consume_message(consumer_id=consumer_id, topic_name=topic_name)
+        sync = req["sync"]
+        act_message=rm.consume_message(consumer_id=consumer_id, topic_name=topic_name, sync=sync)
         resp = {
             "status": "success",
-            "message": f'Consumer ID {consumer_id} published in topic {topic_name}',
+            "message": f"Consumer ID {consumer_id} retrieved message from topic {topic_name}: {act_message}",
         }
         return jsonify(resp), 200
     except Exception as e:
