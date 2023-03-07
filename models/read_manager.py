@@ -99,6 +99,7 @@ class readManager:
         self.topic_dbms.create_table()
         self.partition_dbms.create_table()
         self.consumer_dbms.create_table()
+        self.health_logger.create_table()
 
     def drop_tables(self):
         self.broker_dbms.cur.execute("""
@@ -249,7 +250,7 @@ class readManager:
             'consumer', HEALTH_DELAY_THRESHOLD)
         inactive_brokers=self.health_logger.get_inactive_actors('broker',HEALTH_DELAY_THRESHOLD)
         if inactive_consumer!=None or len(inactive_consumer)>0:
-            print("Consumers who have been inactive for ",HEALTH_DELAY_THRESHOLD, "have the following consumer IDs",inactive_consumer)
+            print(f"Consumers who have been inactive for {HEALTH_DELAY_THRESHOLD} seconds have the following consumer IDs",inactive_consumer)
         if inactive_brokers!=None or len(inactive_brokers)>0:
-            print("Brokers who have been inactive for ",HEALTH_DELAY_THRESHOLD, "have the following brokers IDs",inactive_brokers)
+            print(f"Brokers who have been inactive for {HEALTH_DELAY_THRESHOLD} seconds have the following brokers IDs",inactive_brokers)
         return inactive_consumer, inactive_brokers

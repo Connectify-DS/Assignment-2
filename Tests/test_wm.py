@@ -1,7 +1,6 @@
-import sys
+import sys, time, yaml
 sys.path.append("..")
-import yaml
-from models import writeManager,readManager
+from models import writeManager, readManager
 
 config=None
 with open('../configs/rm1.yaml') as f:
@@ -33,11 +32,17 @@ if __name__=="__main__":
     pname,port=wm.add_partition("test1")
     print(f"Partition name {pname}, Port: {port}")
 
+    time.sleep(7)
+    wm.health_check()
+
     print("Registering producer to existing topic")
     pid1=wm.register_producer("test1")
 
     print("Registering producer to new topic")
     pid2=wm.register_producer("test3")
+
+    time.sleep(7)
+    wm.health_check()
 
     print("List Topics: ")
     print(wm.list_topics())
@@ -46,6 +51,10 @@ if __name__=="__main__":
     wm.produce_message(pid1,"test1","Test Message 1")
     wm.produce_message(pid1,"test1","Test Message 2")
     wm.produce_message(pid1,"test1","Test Message 1")
+
+    time.sleep(7)
+    wm.health_check()
+
     wm.produce_message(pid1,"test1","Test Message 2")
     wm.produce_message(pid1,"test1","Test Message 1")
     wm.produce_message(pid1,"test1","Test Message 2")
@@ -53,6 +62,10 @@ if __name__=="__main__":
     wm.produce_message(pid2,"test3","Test Message 1")
     wm.produce_message(pid2,"test3","Test Message 2")
     wm.produce_message(pid2,"test3","Test Message 1")
+
+    time.sleep(7)
+    wm.health_check()
+
     wm.produce_message(pid2,"test3","Test Message 2")
     wm.produce_message(pid2,"test3","Test Message 1")
     wm.produce_message(pid2,"test3","Test Message 2")
@@ -68,6 +81,9 @@ if __name__=="__main__":
         wm.produce_message(4,"test2","Error")
     except Exception as e:
         print(e)
+
+    time.sleep(7)
+    wm.health_check()
 
     cid1=rm.register_consumer("test1")
     try:
@@ -85,6 +101,10 @@ if __name__=="__main__":
         print(message)
     except Exception as e:
         pass
+
+    time.sleep(7)
+    wm.health_check()
+
     try:
         message=rm.consume_message(cid1,"test1")
         print(message)

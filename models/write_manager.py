@@ -1,10 +1,9 @@
 import time
 import psycopg2
 from config import *
-from database_structures.health_dbms import HealthDBMS
 # from broker import broker
 from in_memory_structures import ConsumerTable, ProducerTable, TopicTable, MessageTable
-from database_structures import BrokerDBMS, TopicDBMS_WM, PartitionDMBS, ProducerDBMS
+from database_structures import BrokerDBMS, TopicDBMS_WM, PartitionDMBS, ProducerDBMS, HealthDBMS
 from myqueue import MyBroker
 import random
 import yaml
@@ -13,8 +12,8 @@ from sqlalchemy import create_engine
 from sqlalchemy_utils import database_exists, create_database
 
 
-HEALTH_DELAY_THRESHOLD = 5*60*60  # 5 mins
-PARTITION_THRESHOLD = 2
+HEALTH_DELAY_THRESHOLD = 5*60  # 5 mins
+PARTITION_THRESHOLD = 10
 
 # Note:
 # Use MyBroker class from myqueue folder to create, publish, consume, list topics as that class
@@ -78,6 +77,7 @@ class writeManager:
         self.topic_dbms.create_table()
         self.partition_dbms.create_table()
         self.producer_dbms.create_table()
+        self.health_logger.create_table()
 
     def drop_tables(self):
         self.broker_dbms.cur.execute("""
@@ -270,7 +270,7 @@ class writeManager:
             'producer', HEALTH_DELAY_THRESHOLD)
         inactive_brokers=self.health_logger.get_inactive_actors('broker',HEALTH_DELAY_THRESHOLD)
         if inactive_producers!=None or len(inactive_producers)>0:
-            print("Producers who have been inactive for ",HEALTH_DELAY_THRESHOLD, "have the following producer IDs",inactive_producers)
+            print(f"Producers who have been inactive for {HEALTH_DELAY_THRESHOLD} seconds have the following producer IDs",inactive_producers)
         if inactive_brokers!=None or len(inactive_brokers)>0:
-            print("Brokers who have been inactive for ",HEALTH_DELAY_THRESHOLD, "have the following brokers IDs",inactive_brokers)
+            print(f"Brokers who have been inactive for {HEALTH_DELAY_THRESHOLD} seconds have the following brokers IDs",inactive_brokers)
         return inactive_producers,inactive_brokers
