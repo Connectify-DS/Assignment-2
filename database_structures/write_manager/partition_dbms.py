@@ -18,9 +18,7 @@ class PartitionDMBS:
                 CREATE TABLE IF NOT EXISTS PARTITIONS(
                 ID SERIAL PRIMARY KEY NOT NULL,
                 BROKER_ID INT NOT NULL,
-                NAME TEXT NOT NULL,
-                FOREIGN KEY (BROKER_ID) REFERENCES BROKERS(ID)
-                ON DELETE CASCADE);
+                NAME TEXT NOT NULL);
             """)
 
             self.conn.commit()

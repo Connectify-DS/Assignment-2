@@ -60,7 +60,6 @@ def addTopic():
         }
         return jsonify(resp), 200
     except Exception as e:
-        print(e)
         resp = {
             "status": "failure",
             "message": str(e),
@@ -138,7 +137,7 @@ def registerConsumer():
         }
         return jsonify(resp), 400
 
-@app.route('/consumer/consume', methods=['POST'])
+@app.route('/consumer/consume', methods=['GET'])
 def retrieve():
     req = request.json
     if req is None or 'consumer_id' not in req or 'topic_name' not in req or 'sync' not in req:
@@ -165,4 +164,4 @@ def retrieve():
         return jsonify(resp), 400
 
 if __name__ == "__main__":
-    app.run(debug=True, port=config['SERVER_PORT'])
+    app.run(debug=False, port=config['SERVER_PORT'])

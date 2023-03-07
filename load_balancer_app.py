@@ -135,6 +135,7 @@ def consumeMessage():
     """
     Forward Message to RM to consume message
     """
+    global curr_id
     rm_request_url=config['READ_MANAGER_URLS'][curr_id]+"/consumer/consume"
     curr_id=(curr_id+1)%num_rms
     data=request.json
@@ -142,10 +143,11 @@ def consumeMessage():
     return handle_request(rm_request_url,data,"Read Manager","GET")
 
 @app.route('/consumer/register', methods=['POST'])
-def registerProducer():
+def registerConsumer():
     """
     Forward message to RM to register consumer
     """
+    global curr_id
     rm_request_url=config['READ_MANAGER_URLS'][curr_id]+"/consumer/register"
     curr_id=(curr_id+1)%num_rms
     data=request.json
@@ -153,4 +155,4 @@ def registerProducer():
     return handle_request(rm_request_url,data,"Read Manager")
   
 if __name__ == "__main__":
-    app.run(debug=True,port=config['SERVER_PORT'])
+    app.run(debug=False,port=config['SERVER_PORT'])

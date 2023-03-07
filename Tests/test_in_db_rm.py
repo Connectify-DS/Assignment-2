@@ -27,7 +27,7 @@ def create_tables():
 
 def drop_tables():
     broker_dbms.cur.execute("""
-        DROP TABLE IF EXISTS BROKERS, CONSUMERS, PARTITIONS, TOPICS_WM, HEALTHLOG CASCADE;
+        DROP TABLE IF EXISTS BROKERS, CONSUMERS, PARTITIONS, TOPICS_WM, HEALTHLOG;
     """)
 
     broker_dbms.conn.commit()

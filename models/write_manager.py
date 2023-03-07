@@ -1,4 +1,5 @@
 import time
+from flask import jsonify
 import psycopg2
 from config import *
 # from broker import broker
@@ -91,13 +92,13 @@ class writeManager:
     def add_broker(self, port):
         ## Note: You will have to request read manager to add this broker too.
         if self.ispersistent:
-            port = self.curr_port
+            # port = self.curr_port
             self.curr_port += 100
             broker_id = self.broker_dbms.add_new_broker(str(port))
         else:
             broker_id = self.num_brokers
             self.brokerId.append(broker_id)
-            port = self.curr_port
+            # port = self.curr_port
             self.curr_port += 100
             self.broker_port[broker_id] = port
         return broker_id
@@ -120,16 +121,17 @@ class writeManager:
             self.partition_dbms.add_partition(partition_name, broker_id)
             self.health_logger.add_update_health_log(
                 'broker', broker_port, time.time())
-            print(f"broker Port: {broker_port}")
         else:
             self.topics.append(topic_name)
             self.topics_offset[topic_name] = 0
             self.topic_numPartitions[topic_name] = 0
 
             
-        MyBroker.add_topic(topic_name, self.read_manager_ports)
-        return self.add_partition(topic_name)
-
+        resp = MyBroker.add_topic(topic_name, self.read_manager_ports)
+        self.add_partition(topic_name)
+        # print(resp)
+        return resp
+    
     def add_partition(self, topic_name):
         # Need to send request to read manager too.
         # Choose a Broker (Round Robin / Random)
@@ -155,11 +157,15 @@ class writeManager:
             self.partition_broker[partition_name] = broker_id
 
         url = "http://127.0.0.1:" + str(broker_port)
-        MyBroker.create_partition(
+        resp = MyBroker.create_partition(
             url, topic_name, partition_name, broker_id, self.read_manager_ports)
         self.health_logger.add_update_health_log(
             'broker', broker_port, time.time())
-        return partition_name, broker_port
+        # resp = {"status" : "success",
+        #         "partition_name" : partition_name,
+        #         "broker_port" : broker_port
+        # }
+        return resp
 
     def list_topics(self):
         """

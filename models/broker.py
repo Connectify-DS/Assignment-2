@@ -1,5 +1,6 @@
 import sys
 import psycopg2
+import requests
 from database_structures.health_dbms import HealthDBMS
 from in_memory_structures import TopicTable, MessageTable
 from database_structures import TopicDBMS, MessageDBMS
@@ -42,6 +43,27 @@ class Broker:
             # Create the tables if they don't exist in memory
             self.message_table = MessageTable()
             self.topic_table = TopicTable()
+        
+        wm_url = "http://127.0.0.1:" + str(config["WRITE_MANAGER_PORT"]) +  "/broker"
+        data = {"port" : config["SERVER_PORT"]}
+        r = None
+
+        try:
+            
+            r = requests.post(wm_url, json = data)
+            r.raise_for_status()
+        except requests.exceptions.HTTPError as errh:
+            print ("Http Error:",errh)
+        except requests.exceptions.ConnectionError as errc:
+            print ("Error Connecting:",errc)
+
+        if r is None:
+            print(f"Null Response")
+
+        response = r.json()
+
+        if response["status"] == "success":
+            print("Broker Listed")
 
     def reset_dbms(self):
         self.cur.execute("""

@@ -17,8 +17,7 @@ class ProducerDBMS:
             self.cur.execute("""
                 CREATE TABLE IF NOT EXISTS PRODUCERS(
                 ID SERIAL PRIMARY KEY NOT NULL,
-                TOPIC TEXT NOT NULL,
-                FOREIGN KEY (TOPIC) REFERENCES TOPICS_WM(NAME));
+                TOPIC TEXT NOT NULL);
             """)
 
             self.conn.commit()

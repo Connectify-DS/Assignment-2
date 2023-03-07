@@ -1,7 +1,0 @@
-DATABASE: mqsdb
-HOST: 127.0.0.1
-IS_PERSISTENT: true
-PASSWORD: mayank
-PORT: '5432'
-SERVER_PORT: 1111
-USER: postgres

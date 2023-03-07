@@ -71,8 +71,8 @@ class MyBroker:
         if r is None:
             raise Exception("Null response")
         
-        response = r.json()
-        if response["status"]=="failure":
+        response_actual = r.json()
+        if response_actual["status"]=="failure":
             raise Exception(f"{url}: Failed to create topic")
         
         #update all rms
@@ -100,6 +100,7 @@ class MyBroker:
             if response["status"]=="failure":
                 raise Exception(f"{url}: Failed to create partition")
             
+        return response_actual
 
     # list topics in the broker
     # Returns None on Failure
@@ -210,7 +211,6 @@ class MyBroker:
             if response_actual["status"]=="failure":
                 raise Exception(f"{url}: Failed to consume message")
         
-            
             for rm in rms:
                 if rm == own_port:
                     continue
@@ -221,7 +221,7 @@ class MyBroker:
                 r = None
                 
                 try:
-                    r = requests.post(url, json = data)
+                    r = requests.get(url, json = data)
                     r.raise_for_status()
                 except requests.exceptions.HTTPError as errh:
                     if errh.response.status_code==400:

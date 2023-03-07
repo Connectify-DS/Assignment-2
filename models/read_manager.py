@@ -207,15 +207,13 @@ class readManager:
             if not self.consumer_dbms.check_consumer_topic_link(consumer_id, topic_name):
                 raise Exception("ConsumerId is not subscribed to the topic")
 
-            curr_partition = self.topic_dbms.get_current_partition(
-                topic_name)  # round robin
+            curr_partition = self.topic_dbms.get_current_partition(topic_name)  # round robin
             partition_name = topic_name + "." + str(curr_partition)
 
-            broker_port = self.partition_dbms.get_broker_port_from_partition(
-                partition_name)
+            broker_port = self.partition_dbms.get_broker_port_from_partition(partition_name)
             offset = self.consumer_dbms.get_offset(consumer_id, partition_name)
-            self.health_logger.add_update_health_log(
-                'consumer', consumer_id, time.time())
+
+            self.health_logger.add_update_health_log('consumer', consumer_id, time.time())
         else:
             try:
                 if self.consumer_topic[consumer_id] != topic_name:
@@ -226,8 +224,7 @@ class readManager:
             # assign partition
             # curr_partition = random.randint(1,self.topic_numPartitions[topic_name])
             curr_partition = self.topics_offset[topic_name] % self.topic_numPartitions[topic_name] + 1
-            self.topics_offset[topic_name] = (
-                self.topics_offset[topic_name] + 1) % self.topic_numPartitions[topic_name]
+            self.topics_offset[topic_name] = (self.topics_offset[topic_name] + 1) % self.topic_numPartitions[topic_name]
 
             partition_name = topic_name + "." + str(curr_partition)
             curr_id = self.partition_broker[partition_name]
@@ -239,8 +236,7 @@ class readManager:
         url = "http://127.0.0.1:" + str(broker_port)
 
         broker_consumer_data = MyBroker.consume_message(url, partition_name, offset, consumer_id, self.own_port, self.rms, sync)
-        self.health_logger.add_update_health_log(
-            'broker', broker_port, time.time())
+        self.health_logger.add_update_health_log('broker', broker_port, time.time())
         return broker_consumer_data
 
     def health_check(self):

@@ -53,7 +53,6 @@ def addTopic():
         resp = wm.add_topic(topic_name=topic_name)
         return jsonify(resp), 200
     except Exception as e:
-        print(e)
         resp = {
             "status": "failure",
             "message": str(e),
@@ -154,4 +153,4 @@ def publish():
         return jsonify(resp), 400
 
 if __name__ == "__main__":
-    app.run(debug=True, port=config['SERVER_PORT'])
+    app.run(debug=False, port=config['SERVER_PORT'])
