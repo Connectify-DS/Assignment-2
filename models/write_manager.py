@@ -183,14 +183,14 @@ class writeManager:
             #  Add new producer to the healthcheck list with the ID
             #  Save the current time (time.datetime) as the time of creation
             #  You will also have to maintain the last use time (currently empty)
-        self.health_logger.add_update_health_log('producer', producer_id, time.time())
         if self.ispersistent:
             producer_id = self.producer_dbms.add_producer(topic_name)
-            return producer_id
         else:
             self.num_producers += 1
             self.producer_topic[self.num_producers] = topic_name
-            return self.num_producers
+            producer_id = self.num_producers
+        self.health_logger.add_update_health_log('producer', producer_id, time.time())
+        return producer_id
 
     def produce_message(self, producer_id, topic_name, message):
         # Check if Producer can publish to the topic.
@@ -236,8 +236,8 @@ class writeManager:
         self.health_logger.add_update_health_log('broker', broker_port, time.time())
         if (num_msgs/num_partition) > PARTITION_THRESHOLD:
             print(f"Threshold exceeded. Adding new partition for topic {topic_name}")
-            partition_name,broker_port = self.add_partition(topic_name)
-            print(partition_name,broker_port)
+            prs = self.add_partition(topic_name)
+            print(prs['message'])
         
         return resp
 

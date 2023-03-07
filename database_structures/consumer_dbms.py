@@ -75,6 +75,31 @@ class ConsumerDBMS:
             self.conn.rollback()
             self.lock.release()
             raise Exception(f"DBMS Error: Could not get offset of consumer with partition name: {partition_name}: {str(e)}")
+        
+    def decrease_offset(self, consumer_id, partition_name):
+        self.lock.acquire()
+        try:
+            self.cur.execute("""
+                SELECT OFSET FROM CONSUMERS
+                WHERE ID=%s
+            """, (consumer_id,))
+            row=self.cur.fetchone()[0]
+            x = max(row[partition_name]-1, 0)
+            data = {partition_name: x}
+            data = json.dumps(data)
+            self.cur.execute("""
+                UPDATE CONSUMERS
+                SET OFSET = OFSET || %s
+                WHERE ID=%s
+            """,(data, consumer_id,))
+
+            self.conn.commit()
+            self.lock.release()
+            return x-1
+        except Exception as e:
+            self.conn.rollback()
+            self.lock.release()
+            raise Exception(f"DBMS Error: Could not decrease offset of consumer with partition name: {partition_name}: {str(e)}")
     
     def add_partition(self, topic_name, partition_name):
         self.lock.acquire()

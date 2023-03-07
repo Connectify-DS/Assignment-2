@@ -173,7 +173,8 @@ class readManager:
             if not self.consumer_dbms.check_consumer_id(consumer_id):
                 raise Exception("Invalid ConsumerId")
             if not self.consumer_dbms.check_consumer_topic_link(consumer_id, topic_name):
-                raise Exception("ConsumerId is not subscribed to the topic")
+                raise Exception("ConsumerId is not subscribed to the topic") 
+            
 
             curr_partition = self.topic_dbms.get_current_partition(topic_name)  # round robin
             partition_name = topic_name + "." + str(curr_partition)
@@ -195,12 +196,18 @@ class readManager:
             broker_port = self.broker_port[curr_id]
 
             offset = self.offsets[consumer_id][partition_name]
-            self.offsets[consumer_id][partition_name] += 1
         self.health_logger.add_update_health_log('consumer', consumer_id, time.time())
         url = "http://127.0.0.1:" + str(broker_port)
 
-        broker_consumer_data = MyBroker.consume_message(url, partition_name, offset, consumer_id, self.own_port, self.rms, sync)
-        self.health_logger.add_update_health_log('broker', broker_port, time.time())
+        try:
+            broker_consumer_data = MyBroker.consume_message(url, partition_name, offset, consumer_id, self.own_port, self.rms, sync)
+            self.health_logger.add_update_health_log('broker', broker_port, time.time())
+        except Exception as e:
+            if self.ispersistent:
+                self.consumer_dbms.decrease_offset(consumer_id, partition_name)
+            else:
+                self.offsets[consumer_id][partition_name] += 1
+            raise(e)
         return broker_consumer_data
 
     def health_check(self):
