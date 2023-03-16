@@ -26,12 +26,12 @@ class ConsumerDBMS:
         except:
             self.conn.rollback()
 
-    def add_consumer(self,topic_name,num_partitions):
+    def add_consumer(self,topic_name,partitions):
         self.lock.acquire()
         try:
             data={}
-            for i in range(num_partitions):
-                pname = topic_name+"."+str(i+1)
+            for i in partitions:
+                pname = topic_name+"."+str(i)
                 data[pname] = 0
             data = json.dumps(data)
             self.cur.execute("""

@@ -156,6 +156,16 @@ class writeManager:
         self.health_logger.add_update_health_log('broker', broker_port, time.time())
         return resp
 
+    def remove_broker(self, broker_id):
+        if self.ispersistent:
+            self.broker_dbms.remove_broker(broker_id)
+            partitions = self.partition_dbms.get_partitions_by_broker(broker_id)
+            for partition in partitions:
+                topic_name,partition_id=partition.split('.')
+                self.topic_dbms.remove_partition(topic_name,partition_id)
+        MyBroker.remove_broker(broker_id, self.read_manager_ports)
+
+
     def list_topics(self):
         """
         Returns a list of all the topics in the system.
@@ -234,6 +244,7 @@ class writeManager:
             print(prs['message'])
         
         return resp
+
 
     def health_check(self):
         # This function will check the last use time of the producers and log whether

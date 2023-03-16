@@ -240,6 +240,32 @@ class MyBroker:
             return response_actual['message']
         
         return "Syncing"
+
+    @staticmethod
+    def remove_broker(broker_id, rms):
+        for rm in rms:
+            url = "http://127.0.0.1:" + str(rm) + "/broker/remove"
+            data = {"broker_id": broker_id}
+            r = None
+
+            try:
+                r = requests.delete(url, json = data)
+                r.raise_for_status()
+            except requests.exceptions.HTTPError as errh:
+                if errh.response.status_code==400:
+                    raise Exception(f"{url} Failed: "+ str(errh.response.json()["message"]))
+                raise errh
+            except requests.exceptions.ConnectionError as errc:
+                raise errc
+            
+            if r is None:
+                raise Exception("Null response")
+            
+            response = r.json()
+            if response["status"]=="failure":
+                raise Exception(f"{url}: Failed to create topic")
+        return response
+
      
 
 

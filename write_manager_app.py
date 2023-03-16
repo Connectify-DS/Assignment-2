@@ -102,6 +102,30 @@ def addPartition():
         }
         return jsonify(resp), 400
 
+@app.route('/broker/remove', methods=['DELETE'])
+def removeBroker():
+    req = request.json
+    if req is None or 'broker_id' not in req:
+        resp = {
+            "status": "failure",
+            "message": "Required fields absent in request",
+        }
+        return jsonify(resp), 400
+    try:
+        broker_id = req['broker_id']
+        wm.remove_broker(broker_id)
+        resp = {
+            "status": "success",
+            "message": f"Broker {broker_id} removed",
+        }
+        return jsonify(resp), 200
+    except Exception as e:
+        resp = {
+            "status": "failure",
+            "message": str(e),
+        }
+        return jsonify(resp), 400
+
 @app.route('/producer/register', methods=['POST'])
 def registerProducer():
     req = request.json

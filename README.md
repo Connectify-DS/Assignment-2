@@ -14,7 +14,7 @@ Shashwat Shukla (19CS10056)
 
 ## How To Run
 - Start the Load Balancer server \
-`python load_manager_app.py`
+`python load_balancer_app.py`
 - Start the Write Manager server \
 `python write_manager_app.py`
 - Start 2 Read Managers\

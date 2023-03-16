@@ -64,6 +64,29 @@ class PartitionDMBS:
             self.conn.rollback()
             self.lock.release()
             raise Exception(f"DBMS ERROR: Could not find broker port for partition {partition_name}: {str(e)}")
+
+    def get_partitions_by_broker(self,broker_id):
+        self.lock.acquire()
+        try:
+            self.cur.execute("""
+                SELECT NAME
+                FROM PARTITIONS
+                WHERE BROKER_ID=%s
+            """,(broker_id,))
+
+            rows=self.cur.fetchall()
+
+            partitions=[]
+            for row in rows:
+                partitions.append(row[0])
+
+            self.conn.commit()
+            self.lock.release()
+            return partitions
+        except Exception as e:
+            self.conn.rollback()
+            self.lock.release()
+            raise Exception(f"DBMS ERROR: Could not get partitions by broker id {broker_id}: {str(e)}")
         
         
     

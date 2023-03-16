@@ -118,6 +118,13 @@ class readManager:
             for i in self.topic_consumerid[topic_name]:
                 self.offsets[i][partition_name] = 0
 
+    def remove_broker(self, broker_id):
+        if self.ispersistent:
+            self.broker_dbms.remove_broker(broker_id)
+            partitions = self.partition_dbms.get_partitions_by_broker(broker_id)
+            for partition in partitions:
+                self.topic_dbms.remove_partition(partition)
+
     def list_topics(self):
         """
         Returns a list of all the topics in the system.
@@ -142,7 +149,7 @@ class readManager:
             raise Exception("Topic doesn't exist")
 
         if self.ispersistent:
-            num_partitions = self.topic_dbms.get_num_partitions(topic_name)
+            num_partitions = self.topic_dbms.get_partitions(topic_name)
             consumer_id = self.consumer_dbms.add_consumer(
                 topic_name, num_partitions)
         else:

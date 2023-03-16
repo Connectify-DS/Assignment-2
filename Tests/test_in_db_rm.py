@@ -53,18 +53,18 @@ def test_init():
 
 def test_consumer():
     print("Adding Consumer")
-    num_partitions = topic_dbms.get_num_partitions("test1")
+    num_partitions = topic_dbms.get_partitions("test1")
     id1 = consumer_dbms.add_consumer("test1", num_partitions)
     print(f"Added Consumer ID: {id1}")
 
     print("Adding Consumer")
-    num_partitions = topic_dbms.get_num_partitions("test2")
+    num_partitions = topic_dbms.get_partitions("test2")
     id2 = consumer_dbms.add_consumer("test2", num_partitions)
     print(f"Added Consumer ID: {id2}")
 
     try:
         print("Adding Consumer whose topic does not exist")
-        num_partitions = topic_dbms.get_num_partitions("test3")
+        num_partitions = topic_dbms.get_partitions("test3")
         id = consumer_dbms.add_consumer("test3", num_partitions)
         print(f"Added Consumer ID: {id}")
     except Exception as e:

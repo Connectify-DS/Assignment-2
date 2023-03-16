@@ -45,6 +45,11 @@ def handle_request(url,data,forward_to,method="POST"):
                 r = requests.post(url)
             else:
                 r = requests.post(url, json = data)
+        elif method=="DELETE":
+            if data==None:
+                r = requests.delete(url)
+            else:
+                r = requests.delete(url, json = data)
         r.raise_for_status()
     except requests.exceptions.HTTPError as errh:
         if errh.response.status_code==400:
@@ -105,6 +110,14 @@ def addPartition():
     """
     wm_request_url = config['WRITE_MANAGER_URL'] +  "/partition"
     return handle_request(wm_request_url,request.json,"Write Manager")
+
+@app.route('/broker/remove',methods=['DELETE'])
+def removeBroker():
+    """
+    Create a new Partition for a Topic
+    """
+    wm_request_url = config['WRITE_MANAGER_URL'] +  "/broker/remove"
+    return handle_request(wm_request_url,request.json,"Write Manager","DELETE")
 
 @app.route('/topics',methods=['GET'])
 def listTopics():
