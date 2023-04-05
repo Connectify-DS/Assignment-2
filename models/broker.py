@@ -117,7 +117,6 @@ class Broker:
 
     def dequeue(self, topic_name: str, offset: int):
         """
-        l
         Removes the next message from the given topic.
         """
         try:
